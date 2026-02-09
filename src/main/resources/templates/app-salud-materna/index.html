@@ -1,0 +1,1807 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salud Materna</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        
+        .sidenav {
+            height: 100%;
+            width: 250px;
+            position: fixed;
+            z-index: 1;
+            top: 0;
+            left: 0;
+            background-color: #f8f9fa;
+            overflow-x: hidden;
+            padding-top: 20px;
+            border-right: 1px solid #dee2e6;
+        }
+        
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+        
+        .nav-link {
+            color: #333;
+            padding: 10px 20px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: 0.3s;
+            border-left: 3px solid transparent;
+        }
+        
+        .nav-link:hover {
+            background-color: #e9ecef;
+            color: #0d6efd;
+            border-left-color: #0d6efd;
+        }
+        
+        .nav-link.active {
+            background-color: #e3f2fd;
+            color: #0d6efd;
+            border-left-color: #0d6efd;
+            font-weight: 600;
+        }
+        
+        .nav-link i {
+            width: 20px;
+            text-align: center;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 40px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .feature {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        
+        .feature:hover {
+            transform: translateY(-5px);
+        }
+        
+        .feature i {
+            font-size: 2.5rem;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .btn-primary {
+            background-color: #1e40af;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary:hover {
+            background-color: #1e3a8a;
+        }
+        
+        /* Estilos del Modal del Cuestionario */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 2% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 95%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        
+        .seccion-cuestionario {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #e3f2fd;
+            border-radius: 8px;
+            border-left: 4px solid #1e40af;
+        }
+        
+        .seccion-embarazo {
+            margin-top: 20px;
+            padding: 0;
+        }
+        
+        .preguntas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 12px;
+            margin-top: 10px;
+        }
+        
+        .pregunta-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 1px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+        
+        .pregunta-checkbox:hover {
+            background: #f8f9fa;
+            border-color: #1e40af;
+        }
+        
+        .pregunta-checkbox input[type="checkbox"] {
+            margin: 0;
+            transform: scale(1.2);
+        }
+        
+        .enfermedad-desplegable {
+            background: #e8f5e8 !important;
+            border-color: #4caf50 !important;
+            font-weight: bold;
+        }
+        
+        .indicador-desplegable {
+            margin-left: auto;
+            font-weight: bold;
+            color: #4caf50;
+        }
+        
+        .desplegable-enfermedades {
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        input[type="number"] {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            font-size: 14px;
+        }
+        
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #1e40af;
+            box-shadow: 0 0 5px rgba(30, 64, 175, 0.3);
+        }
+        
+        textarea {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #1e40af;
+            box-shadow: 0 0 5px rgba(30, 64, 175, 0.3);
+        }
+        
+        .chatbot-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1e40af;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 1000;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: red;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .chatbot-container {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 350px;
+            height: 500px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            display: none;
+            flex-direction: column;
+            z-index: 1000;
+        }
+        
+        .chatbot-container.visible {
+            display: flex;
+        }
+        
+        .chatbot-header {
+            background: #1e40af;
+            color: white;
+            padding: 15px;
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .voice-toggle {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .chatbot-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .message {
+            padding: 10px 15px;
+            border-radius: 15px;
+            max-width: 80%;
+        }
+        
+        .user-message {
+            background: #1e40af;
+            color: white;
+            align-self: flex-end;
+        }
+        
+        .bot-message {
+            background: #f1f1f1;
+            color: #333;
+            align-self: flex-start;
+        }
+        
+        .chatbot-input {
+            padding: 15px;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .chatbot-input select,
+        .chatbot-input input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .chatbot-input button {
+            background: #1e40af;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 15px;
+            cursor: pointer;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidenav {
+                width: 200px;
+            }
+            
+            .main-content {
+                margin-left: 200px;
+                padding: 15px;
+            }
+            
+            .hero-section {
+                padding: 30px 20px;
+            }
+            
+            .features {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .sidenav {
+                width: 0;
+                position: fixed;
+                z-index: 1000;
+                transition: 0.3s;
+            }
+            
+            .sidenav.active {
+                width: 200px;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                z-index: 1001;
+                background: #1e40af;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                padding: 10px;
+                cursor: pointer;
+            }
+        }
+        
+        .action-btn {
+            background-color: #f8f9fa;
+            border: 2px solid #e9ecef;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .action-btn:hover {
+            background-color: #e9ecef;
+            border-color: #3498db;
+        }
+        
+        .action-btn i {
+            font-size: 2rem;
+            color: #3498db;
+            margin-bottom: 10px;
+        }
+        
+        .user-info {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Botón para menú móvil -->
+    <button class="mobile-menu-btn" id="mobileMenuBtn" style="display: none;" onclick="toggleMobileMenu()">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="sidenav" id="sidebar">
+    
+    	<div class="user-info">
+            <div class="user-avatar">
+                <i class="fas fa-user-md"></i>
+            </div>
+            <div class="user-name">
+                <div class="text-sm text-gray-600 mt-2" th:if="${usuaria}">
+                <a href="/conocimiento-general" th:text="${usuaria?.nombreCompleto ?: 'Usuario'}"></a>
+            </div>
+                <small>Salud Materna</small>
+            </div>
+        </div>
+        <!--  
+        <div class="px-4 py-4">
+            <h2 class="text-xl font-bold text-blue-600">Salud Materna</h2>
+            <div class="text-sm text-gray-600 mt-2" th:if="${usuaria}">
+                <span th:text="${usuaria?.nombreCompleto ?: 'Usuario'}"></span>
+            </div>
+        </div>
+        -->
+        <nav class="mt-4">
+            <a href="/app-salud-materna" class="nav-link active">
+                <i class="fas fa-home"></i> Inicio
+            </a>
+            <a href="/app-salud-materna/citas" class="nav-link">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Recomendación de Citas</span>
+            </a>
+            <a href="/app-salud-materna/educacion-materna" class="nav-link">
+                <i class="fas fa-book"></i> Educación Materna
+            </a>
+            <a href="/app-salud-materna/todos-examenes" class="nav-link">
+                <i class="fas fa-heartbeat"></i> Exámenes de Laboratorio
+            </a>
+            <a href="/reporte-citas" class="nav-link">
+                <i class="fas fa-chart-line"></i> Reportes de Citas
+            </a>
+            
+            <a th:href="@{/app-salud-materna/vista/__${usuaria.idUser}__}" 
+			   class="nav-link pdf-highlight" 
+			   target="_blank">
+			    <i class="fas fa-file-pdf"></i> Generar Informe PDF
+			</a>
+
+            <a th:href="@{/logout}" class="nav-link mt-8 text-red-600">
+                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+            </a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">
+                <i class="fas fa-home text-blue-600 mr-2"></i>
+                Inicio - Salud Materna
+            </h1>
+            <div class="text-sm text-gray-600" th:if="${usuaria}">
+                <span class="font-semibold">Paciente:</span> 
+                <span th:text="${usuaria?.nombreCompleto ?: 'Nombre no disponible'}"></span>
+            </div>
+        </div>
+
+        <!-- Hero Section -->
+        <div class="hero-section">
+            <h1 class="text-3xl font-bold mb-4">¡Bienvenida a Salud Materna!</h1>
+            <p class="text-xl opacity-90">Plataforma integral para el cuidado de la madre durante el embarazo y postparto</p>
+        </div>
+
+        <!-- Mensajes de alerta -->
+        <div th:if="${success}" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+            <i class="fas fa-check-circle mr-2"></i>
+            <span th:text="${success}"></span>
+        </div>
+        
+        <div th:if="${error}" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            <i class="fas fa-exclamation-circle mr-2"></i>
+            <span th:text="${error}"></span>
+        </div>
+
+        <!-- Cuestionario de Salud -->
+        <div class="card">
+            <h3 class="text-lg font-semibold text-gray-800 mb-3">
+                <i class="fas fa-clipboard-list text-blue-600 mr-2"></i> 
+                Cuestionario de Salud
+            </h3>
+            <p class="text-gray-600 mb-4">Completa nuestro cuestionario de salud para un mejor seguimiento de tu embarazo.</p>
+            <button onclick="mostrarCuestionario()" class="btn-primary mb-4">
+                <i class="fas fa-clipboard-list"></i> Gestionar Cuestionario
+            </button>
+            <div id="resumen-cuestionario"></div>
+        </div>
+
+        <!-- Features -->
+        <div class="features">
+        	
+        	<div class="action-btn" onclick="window.location.href='/app-salud-materna/citas'">
+            	<i class="fas fa-baby"></i>
+                <h3 class="font-semibold text-lg mb-2">Calcular Fechas de Cita Embarazo</h3>
+                <p class="text-gray-600">En esta sección podras calcular tus citas prenatales y de ultrasonido recomendados durante tu embarazo</p>
+            </div>
+        	
+            <div class="action-btn" onclick="window.location.href='/app-salud-materna/educacion-materna'">
+                <i class="fas fa-heartbeat"></i>
+                <h3 class="font-semibold text-lg mb-2">Educación Materna</h3>
+                <p class="text-gray-600">En este apartado podras ver informacion para la preparación para la maternidad/paternidad durante el embarazo</p>
+            </div>
+            <div class="action-btn" onclick="window.location.href='/reporte-citas'">
+                <i class="fas fa-diagnoses"></i>
+                <h3 class="font-semibold text-lg mb-2">Reporte de Citas</h3>
+                <p class="text-gray-600">Al realizar su cálculo de citas médicas, le podra compartir la información más relevante a su medico tratante</p>
+            </div>
+            <div class="action-btn" onclick="window.location.href='/app-salud-materna/todos-examenes'">
+                <i class="fas fa-flask"></i>
+                <h3 class="font-semibold text-lg mb-2">🔬 Examenes</h3>
+                <p class="text-gray-600">Para esta sección podras registrar tus resultados de examenes de laboratorio</p>
+            </div>
+        </div>
+
+        <!-- Información de ayuda -->
+        <div class="card">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                <i class="fas fa-question-circle text-blue-600 mr-2"></i>
+                ¿Necesitas ayuda inmediata?
+            </h3>
+            <p class="text-gray-600 mb-3">Usa nuestro ChatBot en la esquina inferior derecha para consultas sobre:</p>
+            <ul class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4">
+                <li class="flex items-center gap-2">
+                    <i class="fas fa-check text-green-500"></i>
+                    <span>Alimentación durante el embarazo</span>
+                </li>
+                <li class="flex items-center gap-2">
+                    <i class="fas fa-check text-green-500"></i>
+                    <span>Ejercicios recomendados</span>
+                </li>
+                <li class="flex items-center gap-2">
+                    <i class="fas fa-check text-green-500"></i>
+                    <span>Cuidados postparto</span>
+                </li>
+                <li class="flex items-center gap-2">
+                    <i class="fas fa-check text-green-500"></i>
+                    <span>Lactancia materna</span>
+                </li>
+                <li class="flex items-center gap-2">
+                    <i class="fas fa-check text-green-500"></i>
+                    <span>Control prenatal</span>
+                </li>
+                <li class="flex items-center gap-2">
+                    <i class="fas fa-check text-green-500"></i>
+                    <span>Y mucho más...</span>
+                </li>
+            </ul>
+            <div class="text-center mt-4">
+                <button onclick="toggleChatbot()" class="btn-primary">
+                    <i class="fas fa-comment-medical"></i> Abrir ChatBot Ahora
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal del Cuestionario (COMPLETO) -->
+    <div id="cuestionarioModal" class="modal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #1e40af; padding-bottom: 10px;">
+                <h2 style="color: #1e40af; margin: 0;">Cuestionario de Salud Materna</h2>
+                <span class="close" onclick="cerrarCuestionario()" style="cursor: pointer; font-size: 28px; color: #666; font-weight: bold;">&times;</span>
+            </div>
+            
+            <form id="formCuestionario">
+                <!-- Pregunta inicial -->
+                <div class="seccion-cuestionario" id="seccionPrimerEmbarazo">
+                    <h3 style="color: #1e40af; margin-bottom: 15px;">¿Es tu primer embarazo?</h3>
+                    <div style="display: flex; gap: 30px; margin: 15px 0;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 10px 15px; background: white; border-radius: 5px; border: 2px solid #1e40af;">
+                            <input type="radio" name="primerEmbarazo" value="true" onchange="mostrarSecciones(this.value)">
+                            <span style="font-weight: bold;">Sí, es mi primer embarazo</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 10px 15px; background: white; border-radius: 5px; border: 2px solid #1e40af;">
+                            <input type="radio" name="primerEmbarazo" value="false" onchange="mostrarSecciones(this.value)">
+                            <span style="font-weight: bold;">No, he tenido embarazos anteriores</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Sección para PRIMER EMBARAZO -->
+                <div class="seccion-embarazo" id="seccionPrimeraVez" style="display: none;">
+                    <div style="background: #f3e5f5; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                        <h4 style="color: #7b1fa2;">Condiciones de salud actuales</h4>
+                        <p style="color: #666; font-size: 14px; margin: 5px 0;">Selecciona las condiciones que aplican a tu salud actual:</p>
+                    </div>
+                    
+                    <div class="preguntas-grid">
+                        <!-- Condiciones simples -->
+                        <label class="pregunta-checkbox">
+                            <input type="checkbox" name="obesidad"> Obesidad
+                        </label>
+                        <label class="pregunta-checkbox">
+                            <input type="checkbox" name="sobrepeso"> Sobrepeso
+                        </label>
+                        <label class="pregunta-checkbox">
+                            <input type="checkbox" name="presionArterialAlta"> Presión arterial alta
+                        </label>
+                        <label class="pregunta-checkbox">
+                            <input type="checkbox" name="diabetesMellitus"> Diabetes Mellitus
+                        </label>
+                        <label class="pregunta-checkbox">
+                            <input type="checkbox" name="epilepsia"> Epilepsia
+                        </label>
+                        <label class="pregunta-checkbox">
+                            <input type="checkbox" name="nefropatia"> Nefropatía
+                        </label>
+                        <label class="pregunta-checkbox">
+                            <input type="checkbox" name="lupus"> Lupus eritematoso sistémico
+                        </label>
+                        <label class="pregunta-checkbox">
+                            <input type="checkbox" name="desnutricion"> Desnutrición
+                        </label>
+                        <label class="pregunta-checkbox">
+                            <input type="checkbox" name="enfermedadTiroidea"> Enfermedad tiroidea
+                        </label>
+                        
+                        <!-- Enfermedades con desplegables -->
+                        <label class="pregunta-checkbox enfermedad-desplegable">
+                            <input type="checkbox" name="enfermedadesPulmon" onchange="toggleDesplegable('pulmon', this.checked)"> 
+                            Enfermedades del pulmón
+                            <span class="indicador-desplegable">▼</span>
+                        </label>
+                        
+                        <label class="pregunta-checkbox enfermedad-desplegable">
+                            <input type="checkbox" name="enfermedadesCorazon" onchange="toggleDesplegable('corazon', this.checked)"> 
+                            Enfermedades del corazón
+                            <span class="indicador-desplegable">▼</span>
+                        </label>
+                        
+                        <label class="pregunta-checkbox enfermedad-desplegable">
+                            <input type="checkbox" name="enfermedadesHematologicas" onchange="toggleDesplegable('hematologicas', this.checked)"> 
+                            Enfermedades hematológicas
+                            <span class="indicador-desplegable">▼</span>
+                        </label>
+                        
+                        <label class="pregunta-checkbox enfermedad-desplegable">
+                            <input type="checkbox" name="enfermedadesTransmisionSexual" onchange="toggleDesplegable('ets', this.checked)"> 
+                            Enfermedades de Transmisión Sexual
+                            <span class="indicador-desplegable">▼</span>
+                        </label>
+                        
+                        <label class="pregunta-checkbox">
+                            <input type="checkbox" name="otrasEnfermedades" onchange="toggleDescripcionOtras(this)"> Otras enfermedades
+                        </label>
+                    </div>
+                    
+                    <!-- Desplegable Enfermedades del Pulmón -->
+                    <div id="desplegable-pulmon" class="desplegable-enfermedades" style="display: none; margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #2196f3;">
+                        <h5 style="color: #2196f3; margin-top: 0;">Especifica enfermedades pulmonares:</h5>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                            <label class="pregunta-checkbox">
+                                <input type="checkbox" name="asma"> Asma
+                            </label>
+                            <label class="pregunta-checkbox">
+                                <input type="checkbox" name="tuberculosis"> Tuberculosis
+                            </label>
+                            <label class="pregunta-checkbox">
+                                <input type="checkbox" name="epoc"> EPOC (Enfermedad Pulmonar Obstructiva Crónica)
+                            </label>
+                            <label class="pregunta-checkbox">
+                                <input type="checkbox" name="fibrosisQuistica"> Fibrosis Quística
+                            </label>
+                            <label class="pregunta-checkbox">
+                                <input type="checkbox" name="neumoniaRecurrente"> Neumonía recurrente
+                            </label>
+                            <label class="pregunta-checkbox">
+                                <input type="checkbox" name="otrasPulmonares" onchange="toggleDescripcionEspecifica('pulmonares', this.checked)"> Otras pulmonares
+                            </label>
+                        </div>
+                        <div id="descripcion-pulmonares" style="display: none; margin-top: 10px;">
+                            <label>Describe otras enfermedades pulmonares:</label>
+                            <textarea name="descripcionOtrasPulmonares" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;" rows="2" placeholder="Especifica otras enfermedades pulmonares..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Desplegable Enfermedades del Corazón -->
+                    <div id="desplegable-corazon" class="desplegable-enfermedades" style="display: none; margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #f44336;">
+                        <h5 style="color: #f44336; margin-top: 0;">Especifica enfermedades cardíacas:</h5>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                            <label class="pregunta-checkbox">
+                                <input type="checkbox" name="cardiopatiaCongenita"> Cardiopatía congénita
+                            </label>
+                            <label class="pregunta-checkbox">
+                                <input type="checkbox" name="valvulopatia"> Valvulopatía
+                            </label>
+                            <label class="pregunta-checkbox">
+                                <input type="checkbox" name="arritmias"> Arritmias
+                            </label>
+                            <label class="pregunta-checkbox">
+                                <input type="checkbox" name="miocardiopatia"> Miocardiopatía
+                            </label>
+                            <label class="pregunta-checkbox">
+                                <input type="checkbox" name="hipertensionPulmonar"> Hipertensión pulmonar
+                            </label>
+                            <label class="pregunta-checkbox">
+                                <input type="checkbox" name="otrasCardiaca" onchange="toggleDescripcionEspecifica('cardiaca', this.checked)"> Otras cardíacas
+                            </label>
+                        </div>
+                        <div id="descripcion-cardiaca" style="display: none; margin-top: 10px;">
+                            <label>Describe otras enfermedades cardíacas:</label>
+                            <textarea name="descripcionOtrasCardiaca" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;" rows="2" placeholder="Especifica otras enfermedades cardíacas..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Desplegable Enfermedades Hematológicas -->
+                    <div id="desplegable-hematologicas" class="desplegable-enfermedades" style="display: none; margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #9c27b0;">
+                        <h5 style="color: #9c27b0; margin-top: 0;">Especifica enfermedades hematológicas:</h5>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                            <label class="pregunta-checkbox">
+                                <input type="checkbox" name="anemia"> Anemia
+                            </label>
+                            <label class="pregunta-checkbox">
+                                <input type="checkbox" name="trombocitopenia"> Trombocitopenia
+                            </label>
+                            <label class="pregunta-checkbox">
+                                <input type="checkbox" name="hemofilia"> Hemofilia
+                            </label>
+                            <label class="pregunta-checkbox">
+                                <input type="checkbox" name="leucemia"> Leucemia
+                            </label>
+                            <label class="pregunta-checkbox">
+                                <input type="checkbox" name="anemiaFalciforme"> Anemia falciforme
+                            </label>
+                            <label class="pregunta-checkbox">
+                                <input type="checkbox" name="otrasHematologicas" onchange="toggleDescripcionEspecifica('hematologicas', this.checked)"> Otras hematológicas
+                            </label>
+                        </div>
+                        <div id="descripcion-hematologicas" style="display: none; margin-top: 10px;">
+                            <label>Describe otras enfermedades hematológicas:</label>
+                            <textarea name="descripcionOtrasHematologicas" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;" rows="2" placeholder="Especifica otras enfermedades hematológicas..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Desplegable ETS -->
+                    <div id="desplegable-ets" class="desplegable-enfermedades" style="display: none; margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #ff9800;">
+                        <h5 style="color: #ff9800; margin-top: 0;">Especifica Enfermedades de Transmisión Sexual:</h5>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                            <label class="pregunta-checkbox">
+                                <input type="checkbox" name="vih"> VIH/SIDA
+                            </label>
+                            <label class="pregunta-checkbox">
+                                <input type="checkbox" name="sifilis"> Sífilis
+                            </label>
+                            <label class="pregunta-checkbox">
+                                <input type="checkbox" name="gonorrea"> Gonorrea
+                            </label>
+                            <label class="pregunta-checkbox">
+                                <input type="checkbox" name="clamidia"> Clamidia
+                            </label>
+                            <label class="pregunta-checkbox">
+                                <input type="checkbox" name="herpesGenital"> Herpes genital
+                            </label>
+                            <label class="pregunta-checkbox">
+                                <input type="checkbox" name="vph"> VPH (Virus del Papiloma Humano)
+                            </label>
+                            <label class="pregunta-checkbox">
+                                <input type="checkbox" name="otrasEts" onchange="toggleDescripcionEspecifica('ets', this.checked)"> Otras ETS
+                            </label>
+                        </div>
+                        <div id="descripcion-ets" style="display: none; margin-top: 10px;">
+                            <label>Describe otras ETS:</label>
+                            <textarea name="descripcionOtrasEts" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;" rows="2" placeholder="Especifica otras enfermedades de transmisión sexual..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Otras enfermedades -->
+                    <div id="descripcionOtrasContainer" style="display: none; margin-top: 15px; padding: 15px; background: #fff3e0; border-radius: 8px;">
+                        <label style="font-weight: bold;">Describe otras enfermedades no listadas:</label>
+                        <textarea name="descripcionOtras" style="width: 100%; padding: 10px; border: 1px solid #ffb74d; border-radius: 5px; margin-top: 8px;" rows="3" placeholder="Describe cualquier otra condición médica que no esté en la lista..."></textarea>
+                    </div>
+                </div>
+                
+                <!-- Sección para EMBARAZOS ANTERIORES -->
+                <div class="seccion-embarazo" id="seccionEmbarazosAnteriores" style="display: none;">
+                    <div style="background: #e8f5e8; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                        <h4 style="color: #2e7d32;">Información de embarazos anteriores</h4>
+                        <p style="color: #666; font-size: 14px; margin: 5px 0;">Proporciona información sobre tus embarazos anteriores:</p>
+                    </div>
+                    
+                    <!-- Información numérica de embarazos -->
+                    <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e0e0e0; margin-bottom: 20px;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
+                            <div>
+                                <label style="font-weight: bold; display: block; margin-bottom: 5px;">¿Cuántos embarazos fueron?</label>
+                                <input type="number" name="numeroEmbarazos" min="1" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                            </div>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                            <div>
+                                <label style="font-weight: bold; display: block; margin-bottom: 5px;">Partos:</label>
+                                <input type="number" name="numeroPartos" min="0" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                            </div>
+                            <div>
+                                <label style="font-weight: bold; display: block; margin-bottom: 5px;">Cesáreas:</label>
+                                <input type="number" name="numeroCesareas" min="0" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                            </div>
+                            <div>
+                                <label style="font-weight: bold; display: block; margin-bottom: 5px;">Abortos:</label>
+                                <input type="number" name="numeroAbortos" min="0" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                            </div>
+                            <div>
+                                <label style="font-weight: bold; display: block; margin-bottom: 5px;">Embarazos ectópicos:</label>
+                                <input type="number" name="numeroEctopicos" min="0" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Complicaciones en embarazos anteriores -->
+                    <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e0e0e0;">
+                        <h5 style="color: #d32f2f; margin-top: 0; margin-bottom: 15px;">Complicaciones en embarazos anteriores:</h5>
+                        <div class="preguntas-grid">
+                            <label class="pregunta-checkbox">
+                                <input type="checkbox" name="trastornosHipertensivos"> Trastornos hipertensivos del embarazo
+                            </label>
+                            <label class="pregunta-checkbox">
+                                <input type="checkbox" name="desprendimientoPlacenta"> Desprendimiento prematuro de placenta
+                            </label>
+                            <label class="pregunta-checkbox">
+                                <input type="checkbox" name="partoPretermino"> Parto pretérmino
+                            </label>
+                            <label class="pregunta-checkbox">
+                                <input type="checkbox" name="diabetesGestacional"> Diabetes Gestacional
+                            </label>
+                            <label class="pregunta-checkbox">
+                                <input type="checkbox" name="restriccionCrecimiento"> Restricción del crecimiento intrauterino
+                            </label>
+                            <label class="pregunta-checkbox">
+                                <input type="checkbox" name="muerteFetal"> Muerte fetal
+                            </label>
+                            <label class="pregunta-checkbox">
+                                <input type="checkbox" name="nefropatiaAnterior"> Nefropatía
+                            </label>
+                            <label class="pregunta-checkbox enfermedad-desplegable">
+                                <input type="checkbox" name="enfermedadesTransmisionSexualAnterior" onchange="toggleDesplegable('ets-anterior', this.checked)"> 
+                                Enfermedades de Transmisión Sexual
+                                <span class="indicador-desplegable">▼</span>
+                            </label>
+                            <label class="pregunta-checkbox">
+                                <input type="checkbox" name="lupusAnterior"> Lupus eritematoso sistémico
+                            </label>
+                            <label class="pregunta-checkbox">
+                                <input type="checkbox" name="desnutricionAnterior"> Desnutrición
+                            </label>
+                            <label class="pregunta-checkbox">
+                                <input type="checkbox" name="enfermedadTiroideaAnterior"> Enfermedad tiroidea
+                            </label>
+                            <label class="pregunta-checkbox">
+                                <input type="checkbox" name="otrasEnfermedadesAnterior" onchange="toggleDescripcionOtrasAnterior(this)"> Otras enfermedades
+                            </label>
+                        </div>
+                        
+                        <!-- Desplegable ETS para embarazos anteriores -->
+                        <div id="desplegable-ets-anterior" class="desplegable-enfermedades" style="display: none; margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #ff9800;">
+                            <h5 style="color: #ff9800; margin-top: 0;">Especifica Enfermedades de Transmisión Sexual:</h5>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                                <label class="pregunta-checkbox">
+                                    <input type="checkbox" name="vihAnterior"> VIH/SIDA
+                                </label>
+                                <label class="pregunta-checkbox">
+                                    <input type="checkbox" name="sifilisAnterior"> Sífilis
+                                </label>
+                                <label class="pregunta-checkbox">
+                                    <input type="checkbox" name="gonorreaAnterior"> Gonorrea
+                                </label>
+                                <label class="pregunta-checkbox">
+                                    <input type="checkbox" name="clamidiaAnterior"> Clamidia
+                                </label>
+                                <label class="pregunta-checkbox">
+                                    <input type="checkbox" name="herpesGenitalAnterior"> Herpes genital
+                                </label>
+                                <label class="pregunta-checkbox">
+                                    <input type="checkbox" name="vphAnterior"> VPH (Virus del Papiloma Humano)
+                                </label>
+                                <label class="pregunta-checkbox">
+                                    <input type="checkbox" name="otrasEtsAnterior" onchange="toggleDescripcionEspecifica('ets-anterior', this.checked)"> Otras ETS
+                                </label>
+                            </div>
+                            <div id="descripcion-ets-anterior" style="display: none; margin-top: 10px;">
+                                <label>Describe otras ETS:</label>
+                                <textarea name="descripcionOtrasEtsAnterior" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; margin-top: 5px;" rows="2" placeholder="Especifica otras enfermedades de transmisión sexual..."></textarea>
+                            </div>
+                        </div>
+                        
+                        <!-- Otras enfermedades para embarazos anteriores -->
+                        <div id="descripcionOtrasAnteriorContainer" style="display: none; margin-top: 15px; padding: 15px; background: #fff3e0; border-radius: 8px;">
+                            <label style="font-weight: bold;">Describe otras enfermedades o complicaciones no listadas:</label>
+                            <textarea name="descripcionOtrasAnterior" style="width: 100%; padding: 10px; border: 1px solid #ffb74d; border-radius: 5px; margin-top: 8px;" rows="3" placeholder="Describe cualquier otra complicación o enfermedad que no esté en la lista..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Botones de acción -->
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e0e0e0; text-align: center;">
+                    <button type="button" onclick="guardarCuestionario()" class="btn-primary" style="padding: 12px 40px; font-size: 16px;">
+                        <i class="fas fa-save"></i> Guardar Cuestionario
+                    </button>
+                    <button type="button" onclick="cerrarCuestionario()" style="padding: 12px 30px; margin-left: 15px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Botón del chatbot integrado -->
+    <button class="chatbot-btn" onclick="toggleChatbot()">
+        <i class="fas fa-comment-medical"></i>
+        <span class="notification-badge">!</span>
+    </button>
+    
+    <!-- Contenedor del chatbot integrado -->
+    <div class="chatbot-container" id="chatbotContainer">
+        <div class="chatbot-header">
+            <span>Asistente de Salud Materna</span>
+            <button class="voice-toggle" id="voiceToggle" onclick="toggleVoice()">
+                <i class="fas fa-volume-up"></i>
+            </button>
+        </div>
+        <div class="chatbot-messages" id="chatMessages">
+            <!-- Los mensajes se agregarán aquí dinámicamente -->
+        </div>
+        <div class="chatbot-input">
+            <select id="modeSelect">
+                <option value="embarazo">Embarazo</option>
+                <option value="puerperio">Puerperio</option>
+                <option value="general">General</option>
+            </select>
+            <input type="text" id="userInput" placeholder="Escribe tu pregunta..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let voiceEnabled = true;
+        let chatOpened = false;
+        const speech = new SpeechSynthesisUtterance();
+        speech.lang = 'es-US';
+        speech.rate = 0.9;
+        speech.pitch = 1;
+        let voicesLoaded = false;
+
+        // ========== FUNCIONES DE NAVEGACIÓN RESPONSIVE ==========
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('active');
+        }
+
+        // Verificar tamaño de pantalla
+        function checkScreenSize() {
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            if (window.innerWidth <= 576) {
+                mobileMenuBtn.style.display = 'block';
+            } else {
+                mobileMenuBtn.style.display = 'none';
+                document.getElementById('sidebar').classList.remove('active');
+            }
+        }
+
+        window.addEventListener('resize', checkScreenSize);
+        window.addEventListener('load', checkScreenSize);
+
+        // ========== FUNCIONES DEL CUESTIONARIO ==========
+        function mostrarCuestionario() {
+            console.log("Función mostrarCuestionario llamada");
+            verificarCuestionarioExistente();
+        }
+
+        async function verificarCuestionarioExistente() {
+            try {
+                console.log("🔍 Verificando si existe cuestionario...");
+                const response = await fetch('/api/cuestionario/existe');
+                const data = await response.json();
+                
+                if (data.existe) {
+                    // Mostrar opciones al usuario
+                    const opcion = confirm('Ya tienes un cuestionario registrado. ¿Qué deseas hacer?\n\nClick en "Aceptar" para VER/EDITAR el cuestionario existente.\nClick en "Cancelar" para CREAR UNO NUEVO (se borrará el anterior).');
+                    
+                    if (opcion) {
+                        // Ver/Editar existente
+                        cargarCuestionarioExistente();
+                    } else {
+                        // Crear nuevo (limpiar primero)
+                        if (confirm('⚠️ ¿Estás segura de que quieres crear un nuevo cuestionario? El anterior se eliminará.')) {
+                            await eliminarCuestionarioExistente();
+                            document.getElementById('cuestionarioModal').style.display = 'block';
+                        }
+                    }
+                } else {
+                    // No existe, mostrar formulario vacío
+                    document.getElementById('cuestionarioModal').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error al verificar cuestionario:', error);
+                document.getElementById('cuestionarioModal').style.display = 'block';
+            }
+        }
+
+        // Función para eliminar cuestionario existente
+        async function eliminarCuestionarioExistente() {
+            try {
+                const response = await fetch('/api/cuestionario/eliminar', {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    console.log("✅ Cuestionario anterior eliminado");
+                }
+            } catch (error) {
+                console.error('Error al eliminar cuestionario:', error);
+            }
+        }
+
+        //Función para cargar cuestionario existente
+        async function cargarCuestionarioExistente() {
+            try {
+                console.log("🔄 Cargando cuestionario existente...");
+                const response = await fetch('/api/cuestionario/obtener');
+                const data = await response.json();
+                
+                if (data.message) {
+                    console.log("ℹ️ No hay cuestionario existente");
+                    document.getElementById('cuestionarioModal').style.display = 'block';
+                    return;
+                }
+                
+                console.log("✅ Cuestionario cargado:", data);
+                llenarFormulario(data);
+                document.getElementById('cuestionarioModal').style.display = 'block';
+                
+            } catch (error) {
+                console.error('❌ Error al cargar cuestionario:', error);
+                document.getElementById('cuestionarioModal').style.display = 'block';
+            }
+        }
+
+        // Función para llenar el formulario con datos existentes
+        function llenarFormulario(datos) {
+            console.log("📝 Llenando formulario con datos existentes...");
+            
+            // 1. Seleccionar la opción correcta de primer embarazo
+            if (datos.primerEmbarazo !== null && datos.primerEmbarazo !== undefined) {
+                const primerEmbarazoValue = datos.primerEmbarazo ? 'true' : 'false';
+                const radioButton = document.querySelector(`input[name="primerEmbarazo"][value="${primerEmbarazoValue}"]`);
+                if (radioButton) {
+                    radioButton.checked = true;
+                    // Mostrar la sección correspondiente
+                    mostrarSecciones(primerEmbarazoValue);
+                }
+            }
+            
+            // 2. Llenar checkboxes simples
+            const checkboxesSimples = [
+                'obesidad', 'sobrepeso', 'presionArterialAlta', 'diabetesMellitus', 
+                'epilepsia', 'nefropatia', 'lupus', 'desnutricion', 'enfermedadTiroidea',
+                'otrasEnfermedades', 'enfermedadesPulmon', 'enfermedadesCorazon',
+                'enfermedadesHematologicas', 'enfermedadesTransmisionSexual'
+            ];
+            
+            checkboxesSimples.forEach(campo => {
+                const checkbox = document.querySelector(`[name="${campo}"]`);
+                if (checkbox && datos[campo] !== null && datos[campo] !== undefined) {
+                    checkbox.checked = datos[campo];
+                }
+            });
+            
+            // 3. Llenar campos numéricos
+            const camposNumericos = [
+                'numeroEmbarazos', 'numeroPartos', 'numeroCesareas', 'numeroAbortos', 'numeroEctopicos'
+            ];
+            
+            camposNumericos.forEach(campo => {
+                const input = document.querySelector(`[name="${campo}"]`);
+                if (input && datos[campo] !== null && datos[campo] !== undefined) {
+                    input.value = datos[campo];
+                }
+            });
+            
+            // 4. Llenar campos de texto (descripciones)
+            if (datos.descripcionOtras) {
+                document.querySelector('[name="descripcionOtras"]').value = datos.descripcionOtras;
+                document.getElementById('descripcionOtrasContainer').style.display = 'block';
+            }
+            
+            if (datos.descripcionOtrasAnterior) {
+                document.querySelector('[name="descripcionOtrasAnterior"]').value = datos.descripcionOtrasAnterior;
+                document.getElementById('descripcionOtrasAnteriorContainer').style.display = 'block';
+            }
+            
+            // 5. Llenar enfermedades específicas del pulmón
+            if (datos.enfermedadesPulmon) {
+                toggleDesplegable('pulmon', true);
+                
+                const pulmonCheckboxes = ['asma', 'tuberculosis', 'epoc', 'fibrosisQuistica', 'neumoniaRecurrente', 'otrasPulmonares'];
+                pulmonCheckboxes.forEach(campo => {
+                    const checkbox = document.querySelector(`[name="${campo}"]`);
+                    if (checkbox && datos[campo] !== null && datos[campo] !== undefined) {
+                        checkbox.checked = datos[campo];
+                    }
+                });
+                
+                if (datos.descripcionOtrasPulmonares) {
+                    document.querySelector('[name="descripcionOtrasPulmonares"]').value = datos.descripcionOtrasPulmonares;
+                    document.getElementById('descripcion-pulmonares').style.display = 'block';
+                }
+            }
+            
+            // 6. Llenar enfermedades específicas del corazón
+            if (datos.enfermedadesCorazon) {
+                toggleDesplegable('corazon', true);
+                
+                const corazonCheckboxes = ['cardiopatiaCongenita', 'valvulopatia', 'arritmias', 'miocardiopatia', 'hipertensionPulmonar', 'otrasCardiaca'];
+                corazonCheckboxes.forEach(campo => {
+                    const checkbox = document.querySelector(`[name="${campo}"]`);
+                    if (checkbox && datos[campo] !== null && datos[campo] !== undefined) {
+                        checkbox.checked = datos[campo];
+                    }
+                });
+                
+                if (datos.descripcionOtrasCardiaca) {
+                    document.querySelector('[name="descripcionOtrasCardiaca"]').value = datos.descripcionOtrasCardiaca;
+                    document.getElementById('descripcion-cardiaca').style.display = 'block';
+                }
+            }
+            
+            // 7. Llenar enfermedades hematológicas específicas
+            if (datos.enfermedadesHematologicas) {
+                toggleDesplegable('hematologicas', true);
+                
+                const hematologicasCheckboxes = ['anemia', 'trombocitopenia', 'hemofilia', 'leucemia', 'anemiaFalciforme', 'otrasHematologicas'];
+                hematologicasCheckboxes.forEach(campo => {
+                    const checkbox = document.querySelector(`[name="${campo}"]`);
+                    if (checkbox && datos[campo] !== null && datos[campo] !== undefined) {
+                        checkbox.checked = datos[campo];
+                    }
+                });
+                
+                if (datos.descripcionOtrasHematologicas) {
+                    document.querySelector('[name="descripcionOtrasHematologicas"]').value = datos.descripcionOtrasHematologicas;
+                    document.getElementById('descripcion-hematologicas').style.display = 'block';
+                }
+            }
+            
+            // 8. Llenar ETS específicas
+            if (datos.enfermedadesTransmisionSexual) {
+                toggleDesplegable('ets', true);
+                
+                const etsCheckboxes = ['vih', 'sifilis', 'gonorrea', 'clamidia', 'herpesGenital', 'vph', 'otrasEts'];
+                etsCheckboxes.forEach(campo => {
+                    const checkbox = document.querySelector(`[name="${campo}"]`);
+                    if (checkbox && datos[campo] !== null && datos[campo] !== undefined) {
+                        checkbox.checked = datos[campo];
+                    }
+                });
+                
+                if (datos.descripcionOtrasEts) {
+                    document.querySelector('[name="descripcionOtrasEts"]').value = datos.descripcionOtrasEts;
+                    document.getElementById('descripcion-ets').style.display = 'block';
+                }
+            }
+            
+            // 9. Llenar complicaciones de embarazos anteriores
+            const complicacionesCheckboxes = [
+                'trastornosHipertensivos', 'desprendimientoPlacenta', 'partoPretermino', 
+                'diabetesGestacional', 'restriccionCrecimiento', 'muerteFetal', 
+                'nefropatiaAnterior', 'lupusAnterior', 'desnutricionAnterior', 
+                'enfermedadTiroideaAnterior', 'otrasEnfermedadesAnterior'
+            ];
+            
+            complicacionesCheckboxes.forEach(campo => {
+                const checkbox = document.querySelector(`[name="${campo}"]`);
+                if (checkbox && datos[campo] !== null && datos[campo] !== undefined) {
+                    checkbox.checked = datos[campo];
+                }
+            });
+            
+            console.log("✅ Formulario llenado correctamente");
+        }
+
+        // Función para mostrar/ocultar desplegables de enfermedades
+        function toggleDesplegable(tipo, mostrar) {
+            const desplegable = document.getElementById(`desplegable-${tipo}`);
+            if (desplegable) {
+                desplegable.style.display = mostrar ? 'block' : 'none';
+                
+                if (!mostrar) {
+                    const checkboxes = desplegable.querySelectorAll('input[type="checkbox"]');
+                    checkboxes.forEach(checkbox => {
+                        checkbox.checked = false;
+                    });
+                    
+                    const descripcion = document.getElementById(`descripcion-${tipo}`);
+                    if (descripcion) {
+                        descripcion.style.display = 'none';
+                    }
+                }
+            }
+        }
+
+        // Función para mostrar/ocultar descripciones específicas
+        function toggleDescripcionEspecifica(tipo, mostrar) {
+            const descripcion = document.getElementById(`descripcion-${tipo}`);
+            if (descripcion) {
+                descripcion.style.display = mostrar ? 'block' : 'none';
+                
+                if (!mostrar) {
+                    const textarea = descripcion.querySelector('textarea');
+                    if (textarea) {
+                        textarea.value = '';
+                    }
+                }
+            }
+        }
+
+        // Función para mostrar/ocultar descripción de otras enfermedades
+        function toggleDescripcionOtras(checkbox) {
+            const container = document.getElementById('descripcionOtrasContainer');
+            container.style.display = checkbox.checked ? 'block' : 'none';
+            
+            if (!checkbox.checked) {
+                const textarea = container.querySelector('textarea');
+                if (textarea) {
+                    textarea.value = '';
+                }
+            }
+        }
+
+        function toggleDescripcionOtrasAnterior(checkbox) {
+            const container = document.getElementById('descripcionOtrasAnteriorContainer');
+            container.style.display = checkbox.checked ? 'block' : 'none';
+            
+            if (!checkbox.checked) {
+                const textarea = container.querySelector('textarea');
+                if (textarea) {
+                    textarea.value = '';
+                }
+            }
+        }
+
+        // Función para mostrar secciones según la respuesta
+        function mostrarSecciones(primerEmbarazo) {
+            const seccionPrimeraVez = document.getElementById('seccionPrimeraVez');
+            const seccionEmbarazosAnteriores = document.getElementById('seccionEmbarazosAnteriores');
+            
+            document.querySelectorAll('.desplegable-enfermedades').forEach(desplegable => {
+                desplegable.style.display = 'none';
+            });
+            
+            document.querySelectorAll('[id^="descripcion"]').forEach(descripcion => {
+                descripcion.style.display = 'none';
+            });
+            
+            if (primerEmbarazo === 'true') {
+                seccionPrimeraVez.style.display = 'block';
+                seccionEmbarazosAnteriores.style.display = 'none';
+            } else {
+                seccionPrimeraVez.style.display = 'none';
+                seccionEmbarazosAnteriores.style.display = 'block';
+            }
+        }
+
+        // Función para guardar el cuestionario
+        async function guardarCuestionario() {
+            const form = document.getElementById('formCuestionario');
+            const formData = new FormData(form);
+            const cuestionario = {};
+            
+            for (let [key, value] of formData.entries()) {
+                if (key === 'primerEmbarazo') {
+                    cuestionario[key] = value === 'true';
+                } else if (key.startsWith('numero')) {
+                    cuestionario[key] = value ? parseInt(value) : 0;
+                } else if (key.includes('descripcion')) {
+                    cuestionario[key] = value;
+                } else {
+                    const input = form.querySelector(`[name="${key}"]`);
+                    if (input) {
+                        cuestionario[key] = input.checked;
+                    }
+                }
+            }
+            
+            try {
+                const response = await fetch('/api/cuestionario/guardar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(cuestionario)
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    alert('Cuestionario guardado correctamente');
+                    cerrarCuestionario();
+                    mostrarResumenCuestionario();
+                } else {
+                    alert('Error al guardar: ' + result.message);
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al guardar el cuestionario');
+            }
+        }
+
+        // Función para cerrar el cuestionario
+        function cerrarCuestionario() {
+            document.getElementById('cuestionarioModal').style.display = 'none';
+            document.getElementById('formCuestionario').reset();
+            
+            document.getElementById('seccionPrimeraVez').style.display = 'none';
+            document.getElementById('seccionEmbarazosAnteriores').style.display = 'none';
+            document.querySelectorAll('.desplegable-enfermedades').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('[id^="descripcion"]').forEach(el => el.style.display = 'none');
+        }
+
+        // Función para mostrar resumen del cuestionario en la página principal
+        async function mostrarResumenCuestionario() {
+            try {
+                const response = await fetch('/api/cuestionario/obtener');
+                const data = await response.json();
+                
+                if (!data.message) {
+                    let resumenSection = document.getElementById('resumen-cuestionario');
+                    if (!resumenSection) {
+                        resumenSection = document.createElement('div');
+                        resumenSection.id = 'resumen-cuestionario';
+                        resumenSection.className = 'mt-4';
+                        document.querySelector('.card').appendChild(resumenSection);
+                    }
+                    
+                    const esPrimerEmbarazo = data.primerEmbarazo ? 'Sí' : 'No';
+                    
+                    // Generar resumen detallado
+                    const resumenDetallado = generarResumenDetallado(data);
+                    
+                    resumenSection.innerHTML = `
+                        <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; border-left: 4px solid #1e40af;">
+                            <h4 style="margin-top: 0; color: #1e40af;">
+                                <i class="fas fa-clipboard-check"></i> Resumen de Salud
+                            </h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                <div>
+                                    <strong>Primer embarazo:</strong><br>
+                                    ${esPrimerEmbarazo}
+                                </div>
+                            </div>
+                            
+                            <div style="background: white; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+                                ${resumenDetallado}
+                            </div>
+                            
+                            <div style="display: flex; gap: 10px;">
+                                <button onclick="mostrarCuestionario()" class="btn-primary">
+                                    <i class="fas fa-edit"></i> Ver/Editar Cuestionario
+                                </button>
+                                <button onclick="eliminarYCrearNuevo()" style="padding: 8px 15px; background: #dc2626; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                                    <i class="fas fa-plus"></i> Nuevo Cuestionario
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error al cargar resumen:', error);
+            }
+        }
+
+        // Función para generar resumen detallado
+        function generarResumenDetallado(datos) {
+            let resumenHTML = '';
+            
+            // 1. Información básica de embarazo
+            if (datos.primerEmbarazo !== null) {
+                resumenHTML += `
+                    <div style="margin-bottom: 15px;">
+                        <strong style="color: #1e40af;">Información del embarazo:</strong><br>
+                        ${datos.primerEmbarazo ? 'Primer embarazo' : 'Embarazos anteriores'}
+                    </div>
+                `;
+            }
+            
+            // 2. Condiciones médicas generales
+            const condicionesActivas = obtenerCondicionesActivas(datos);
+            if (condicionesActivas.length > 0) {
+                resumenHTML += `
+                    <div style="margin-bottom: 15px;">
+                        <strong style="color: #1e40af;">Condiciones médicas:</strong><br>
+                        ${condicionesActivas.map(cond => `• ${cond}`).join('<br>')}
+                    </div>
+                `;
+            }
+            
+            // 3. Enfermedades específicas
+            const enfermedadesDetalladas = obtenerEnfermedadesDetalladas(datos);
+            if (enfermedadesDetalladas.length > 0) {
+                resumenHTML += `
+                    <div style="margin-bottom: 15px;">
+                        <strong style="color: #1e40af;">Enfermedades específicas:</strong><br>
+                        ${enfermedadesDetalladas.map(enfer => `• ${enfer}`).join('<br>')}
+                    </div>
+                `;
+            }
+            
+            // 4. Información de embarazos anteriores (si aplica)
+            if (!datos.primerEmbarazo && datos.numeroEmbarazos) {
+                resumenHTML += `
+                    <div style="margin-bottom: 15px;">
+                        <strong style="color: #1e40af;">Historial de embarazos:</strong><br>
+                        • Total de embarazos: ${datos.numeroEmbarazos}<br>
+                        ${datos.numeroPartos ? `• Partos: ${datos.numeroPartos}<br>` : ''}
+                        ${datos.numeroCesareas ? `• Cesáreas: ${datos.numeroCesareas}<br>` : ''}
+                        ${datos.numeroAbortos ? `• Abortos: ${datos.numeroAbortos}<br>` : ''}
+                        ${datos.numeroEctopicos ? `• Embarazos ectópicos: ${datos.numeroEctopicos}` : ''}
+                    </div>
+                `;
+                
+                // Complicaciones en embarazos anteriores
+                const complicacionesAnteriores = obtenerComplicacionesAnteriores(datos);
+                if (complicacionesAnteriores.length > 0) {
+                    resumenHTML += `
+                        <div style="margin-bottom: 15px;">
+                            <strong style="color: #dc2626;">Complicaciones en embarazos anteriores:</strong><br>
+                            ${complicacionesAnteriores.map(comp => `• ${comp}`).join('<br>')}
+                        </div>
+                    `;
+                }
+            }
+            
+            // 5. Descripciones adicionales
+            if (datos.descripcionOtras) {
+                resumenHTML += `
+                    <div style="margin-bottom: 15px;">
+                        <strong style="color: #ff9800;">Otras condiciones:</strong><br>
+                        ${datos.descripcionOtras}
+                    </div>
+                `;
+            }
+            
+            if (!resumenHTML) {
+                resumenHTML = '<p style="color: #666; font-style: italic;">No hay información de salud registrada aún.</p>';
+            }
+            
+            return resumenHTML;
+        }
+
+        // Función para obtener condiciones médicas activas
+        function obtenerCondicionesActivas(datos) {
+            const condiciones = [
+                { clave: 'obesidad', nombre: 'Obesidad' },
+                { clave: 'sobrepeso', nombre: 'Sobrepeso' },
+                { clave: 'presionArterialAlta', nombre: 'Presión arterial alta' },
+                { clave: 'diabetesMellitus', nombre: 'Diabetes Mellitus' },
+                { clave: 'epilepsia', nombre: 'Epilepsia' },
+                { clave: 'nefropatia', nombre: 'Nefropatía' },
+                { clave: 'lupus', nombre: 'Lupus eritematoso sistémico' },
+                { clave: 'desnutricion', nombre: 'Desnutrición' },
+                { clave: 'enfermedadTiroidea', nombre: 'Enfermedad tiroidea' }
+            ];
+            
+            return condiciones
+                .filter(cond => datos[cond.clave])
+                .map(cond => cond.nombre);
+        }
+
+        // Función para obtener enfermedades detalladas
+        function obtenerEnfermedadesDetalladas(datos) {
+            const enfermedades = [];
+            
+            // Enfermedades del pulmón
+            if (datos.enfermedadesPulmon) {
+                const pulmonares = [
+                    { clave: 'asma', nombre: 'Asma' },
+                    { clave: 'tuberculosis', nombre: 'Tuberculosis' },
+                    { clave: 'epoc', nombre: 'EPOC' },
+                    { clave: 'fibrosisQuistica', nombre: 'Fibrosis Quística' },
+                    { clave: 'neumoniaRecurrente', nombre: 'Neumonía recurrente' }
+                ].filter(enfer => datos[enfer.clave]).map(enfer => enfer.nombre);
+                
+                if (pulmonares.length > 0) {
+                    enfermedades.push(`Enfermedades pulmonares: ${pulmonares.join(', ')}`);
+                }
+            }
+            
+            // Enfermedades del corazón
+            if (datos.enfermedadesCorazon) {
+                const cardiacas = [
+                    { clave: 'cardiopatiaCongenita', nombre: 'Cardiopatía congénita' },
+                    { clave: 'valvulopatia', nombre: 'Valvulopatía' },
+                    { clave: 'arritmias', nombre: 'Arritmias' },
+                    { clave: 'miocardiopatia', nombre: 'Miocardiopatía' },
+                    { clave: 'hipertensionPulmonar', nombre: 'Hipertensión pulmonar' }
+                ].filter(enfer => datos[enfer.clave]).map(enfer => enfer.nombre);
+                
+                if (cardiacas.length > 0) {
+                    enfermedades.push(`Enfermedades cardíacas: ${cardiacas.join(', ')}`);
+                }
+            }
+            
+            // Enfermedades hematológicas
+            if (datos.enfermedadesHematologicas) {
+                const hematologicas = [
+                    { clave: 'anemia', nombre: 'Anemia' },
+                    { clave: 'trombocitopenia', nombre: 'Trombocitopenia' },
+                    { clave: 'hemofilia', nombre: 'Hemofilia' },
+                    { clave: 'leucemia', nombre: 'Leucemia' },
+                    { clave: 'anemiaFalciforme', nombre: 'Anemia falciforme' }
+                ].filter(enfer => datos[enfer.clave]).map(enfer => enfer.nombre);
+                
+                if (hematologicas.length > 0) {
+                    enfermedades.push(`Enfermedades hematológicas: ${hematologicas.join(', ')}`);
+                }
+            }
+            
+            // ETS
+            if (datos.enfermedadesTransmisionSexual) {
+                const ets = [
+                    { clave: 'vih', nombre: 'VIH/SIDA' },
+                    { clave: 'sifilis', nombre: 'Sífilis' },
+                    { clave: 'gonorrea', nombre: 'Gonorrea' },
+                    { clave: 'clamidia', nombre: 'Clamidia' },
+                    { clave: 'herpesGenital', nombre: 'Herpes genital' },
+                    { clave: 'vph', nombre: 'VPH' }
+                ].filter(enfer => datos[enfer.clave]).map(enfer => enfer.nombre);
+                
+                if (ets.length > 0) {
+                    enfermedades.push(`ETS: ${ets.join(', ')}`);
+                }
+            }
+            
+            return enfermedades;
+        }
+
+        // Función para obtener complicaciones en embarazos anteriores
+        function obtenerComplicacionesAnteriores(datos) {
+            const complicaciones = [
+                { clave: 'trastornosHipertensivos', nombre: 'Trastornos hipertensivos' },
+                { clave: 'desprendimientoPlacenta', nombre: 'Desprendimiento de placenta' },
+                { clave: 'partoPretermino', nombre: 'Parto pretérmino' },
+                { clave: 'diabetesGestacional', nombre: 'Diabetes Gestacional' },
+                { clave: 'restriccionCrecimiento', nombre: 'Restricción crecimiento intrauterino' },
+                { clave: 'muerteFetal', nombre: 'Muerte fetal' },
+                { clave: 'nefropatiaAnterior', nombre: 'Nefropatía' },
+                { clave: 'lupusAnterior', nombre: 'Lupus' },
+                { clave: 'desnutricionAnterior', nombre: 'Desnutrición' },
+                { clave: 'enfermedadTiroideaAnterior', nombre: 'Enfermedad tiroidea' }
+            ];
+            
+            return complicaciones
+                .filter(comp => datos[comp.clave])
+                .map(comp => comp.nombre);
+        }
+
+        // Función para contar condiciones médicas
+        function contarCondiciones(datos) {
+            const condiciones = [
+                'obesidad', 'sobrepeso', 'presionArterialAlta', 'diabetesMellitus',
+                'epilepsia', 'nefropatia', 'lupus', 'desnutricion', 'enfermedadTiroidea'
+            ];
+            
+            let count = 0;
+            condiciones.forEach(condicion => {
+                if (datos[condicion]) count++;
+            });
+            
+            return {
+                total: count,
+                detalle: `${count} condición(es) médica(s) registrada(s)`
+            };
+        }
+
+        // Función para eliminar y crear nuevo cuestionario
+        async function eliminarYCrearNuevo() {
+            if (confirm('⚠️ ¿Estás segura de que quieres crear un nuevo cuestionario? El anterior se eliminará permanentemente.')) {
+                await eliminarCuestionarioExistente();
+                document.getElementById('cuestionarioModal').style.display = 'block';
+            }
+        }
+        
+        // ========== FUNCIONES DEL CHATBOT ==========
+        function toggleChatbot() {
+            const chatbot = document.getElementById('chatbotContainer');
+            const notificationBadge = document.querySelector('.notification-badge');
+            
+            chatbot.classList.toggle('visible');
+            
+            if (!chatOpened && chatbot.classList.contains('visible')) {
+                chatOpened = true;
+                notificationBadge.style.display = 'none';
+                
+                setTimeout(() => {
+                    const welcomeMsg = "¡Hola! Soy tu asistente de salud materna. Puedes preguntarme sobre embarazo o puerperio. También puedo leer las respuestas en voz alta.";
+                    addBotMessage(welcomeMsg);
+                    speakText(welcomeMsg);
+                }, 300);
+            }
+        }
+        
+        function toggleVoice() {
+            voiceEnabled = !voiceEnabled;
+            const voiceButton = document.getElementById('voiceToggle');
+            
+            if (voiceEnabled) {
+                voiceButton.innerHTML = '<i class="fas fa-volume-up"></i>';
+                speakText("Voz activada");
+            } else {
+                voiceButton.innerHTML = '<i class="fas fa-volume-mute"></i>';
+                speakText("Voz desactivada");
+            }
+        }
+        
+        function speakText(text) {
+            if (!voiceEnabled) return;
+            
+            if (!voicesLoaded) {
+                setPreferredVoice();
+            }
+            
+            window.speechSynthesis.cancel();
+            speech.text = text;
+            window.speechSynthesis.speak(speech);
+        }
+        
+        function addBotMessage(text) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', 'bot-message');
+            messageDiv.textContent = text;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function addUserMessage(text) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', 'user-message');
+            messageDiv.textContent = text;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        async function sendMessage() {
+            const userInput = document.getElementById('userInput');
+            const modeSelect = document.getElementById('modeSelect');
+            
+            if (!userInput.value.trim()) return;
+            
+            addUserMessage(userInput.value);
+            
+            const userMessage = userInput.value;
+            userInput.value = '';
+            
+            try {
+                const response = await fetch('/api/chatbot/responder', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `pregunta=${encodeURIComponent(userMessage)}&categoria=${encodeURIComponent(modeSelect.value)}`
+                });
+                
+                const data = await response.json();
+                
+                setTimeout(() => {
+                    addBotMessage(data.respuesta);
+                    speakText(data.respuesta);
+                }, 500);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                setTimeout(() => {
+                    const errorMsg = "Lo siento, hubo un error al procesar tu pregunta. Por favor, intenta nuevamente.";
+                    addBotMessage(errorMsg);
+                    speakText(errorMsg);
+                }, 500);
+            }
+        }
+        
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+        
+        function setPreferredVoice() {
+            const voices = window.speechSynthesis.getVoices();
+            
+            if (voices.length === 0) {
+                setTimeout(setPreferredVoice, 100);
+                return;
+            }
+            
+            const preferredVoices = voices.filter(voice => 
+                voice.lang === 'es-US' ||
+                voice.lang === 'es-MX' ||
+                voice.lang === 'es-419' ||
+                voice.name.toLowerCase().includes('latino')
+            );
+            
+            const selectedVoice = preferredVoices[0] || voices[0];
+            
+            if (selectedVoice) {
+                speech.voice = selectedVoice;
+                voicesLoaded = true;
+            }
+        }
+        
+        function initSpeechSynthesis() {
+            if ('speechSynthesis' in window) {
+                const checkVoices = () => {
+                    const voices = speechSynthesis.getVoices();
+                    if (voices.length > 0) {
+                        setPreferredVoice();
+                    } else {
+                        setTimeout(checkVoices, 100);
+                    }
+                };
+                
+                speechSynthesis.onvoiceschanged = checkVoices;
+                checkVoices();
+            } else {
+                voiceEnabled = false;
+                document.getElementById('voiceToggle').style.display = 'none';
+            }
+        }
+
+        // Inicializar cuando se carga la página
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("Página cargada - Inicializando...");
+            initSpeechSynthesis();
+            mostrarResumenCuestionario();
+            
+            // Verificar que todo funciona
+            console.log("Modal del cuestionario:", document.getElementById('cuestionarioModal'));
+            console.log("Botón Gestionar Cuestionario:", document.querySelector('button[onclick="mostrarCuestionario()"]'));
+            console.log("Función mostrarCuestionario:", typeof mostrarCuestionario);
+        });
+    </script>
+</body>
+</html>

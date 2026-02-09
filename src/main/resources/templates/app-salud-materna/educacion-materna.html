@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salud Materna - Educación</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        
+        .sidenav {
+            height: 100%;
+            width: 250px;
+            position: fixed;
+            z-index: 1;
+            top: 0;
+            left: 0;
+            background-color: #f8f9fa;
+            overflow-x: hidden;
+            padding-top: 20px;
+            border-right: 1px solid #dee2e6;
+        }
+        
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+        
+        .nav-link {
+            color: #333;
+            padding: 10px 20px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: 0.3s;
+            border-left: 3px solid transparent;
+        }
+        
+        .nav-link:hover {
+            background-color: #e9ecef;
+            color: #0d6efd;
+            border-left-color: #0d6efd;
+        }
+        
+        .nav-link.active {
+            background-color: #e3f2fd;
+            color: #0d6efd;
+            border-left-color: #0d6efd;
+            font-weight: 600;
+        }
+        
+        .nav-link i {
+            width: 20px;
+            text-align: center;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 40px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        /* Estilos para acordeones */
+        .rotate-180 {
+            transform: rotate(180deg);
+            transition: transform 0.3s ease;
+        }
+        
+        .acordeon-panel {
+            transition: all 0.3s ease;
+            max-height: 0;
+            overflow: hidden;
+        }
+        
+        .acordeon-panel:not(.hidden) {
+            max-height: 500px;
+            overflow: visible;
+        }
+        
+        .documento-btn {
+            transition: all 0.2s ease;
+        }
+        
+        .documento-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .pdf-modal .swal2-popup {
+            max-width: 1000px;
+            padding: 0;
+        }
+        
+        .pdf-modal .swal2-header {
+            padding: 1.5rem 1.5rem 0;
+        }
+        
+        .pdf-modal .swal2-html-container {
+            padding: 0;
+            margin: 0;
+            height: 70vh;
+        }
+        
+        .chatbot-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1e40af;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 1000;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: red;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .chatbot-container {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 350px;
+            height: 500px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            display: none;
+            flex-direction: column;
+            z-index: 1000;
+        }
+        
+        .chatbot-container.visible {
+            display: flex;
+        }
+        
+        .chatbot-header {
+            background: #1e40af;
+            color: white;
+            padding: 15px;
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .chatbot-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .message {
+            padding: 10px 15px;
+            border-radius: 15px;
+            max-width: 80%;
+        }
+        
+        .user-message {
+            background: #1e40af;
+            color: white;
+            align-self: flex-end;
+        }
+        
+        .bot-message {
+            background: #f1f1f1;
+            color: #333;
+            align-self: flex-start;
+        }
+        
+        .chatbot-input {
+            padding: 15px;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .sidenav {
+                width: 200px;
+            }
+            
+            .main-content {
+                margin-left: 200px;
+                padding: 15px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .sidenav {
+                width: 0;
+                position: fixed;
+                z-index: 1000;
+                transition: 0.3s;
+            }
+            
+            .sidenav.active {
+                width: 200px;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                z-index: 1001;
+                background: #1e40af;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                padding: 10px;
+                cursor: pointer;
+            }
+            
+            .grid-cols-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .user-info {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Botón para menú móvil -->
+    <button class="mobile-menu-btn" id="mobileMenuBtn" style="display: none;" onclick="toggleMobileMenu()">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="sidenav" id="sidebar">
+    
+    	<div class="user-info">
+            <div class="user-avatar">
+                <i class="fas fa-user-md"></i>
+            </div>
+            <div class="user-name">
+                <div class="text-sm text-gray-600 mt-2" th:if="${usuaria}">
+                <a href="/conocimiento-general" th:text="${usuaria?.nombreCompleto ?: 'Usuario'}"></a>
+            </div>
+                <small>Salud Materna</small>
+            </div>
+        </div>
+    	
+        <nav class="mt-4">
+            <a href="/app-salud-materna" class="nav-link active">
+                <i class="fas fa-home"></i> Inicio
+            </a>
+            <a href="/app-salud-materna/citas" class="nav-link">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Recomendación de Citas</span>
+            </a>
+            <a href="/app-salud-materna/educacion-materna" class="nav-link">
+                <i class="fas fa-book"></i> Educación Materna
+            </a>
+            <a href="/app-salud-materna/todos-examenes" class="nav-link">
+                <i class="fas fa-heartbeat"></i> Exámenes de Laboratorio
+            </a>
+            <a href="/reporte-citas" class="nav-link">
+                <i class="fas fa-chart-line"></i> Reportes de Citas
+            </a>
+            
+            <a th:href="@{/app-salud-materna/vista/__${usuaria.idUser}__}" 
+			   class="nav-link pdf-highlight" 
+			   target="_blank">
+			    <i class="fas fa-file-pdf"></i> Generar Informe PDF
+			</a>
+
+            <a th:href="@{/logout}" class="nav-link mt-8 text-red-600">
+                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+            </a>
+        </nav>
+    </div>
+
+    <div class="main-content">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">
+                <i class="fas fa-book"></i>
+                Educación Materna
+            </h1>
+            <div class="text-sm text-gray-600" th:if="${usuaria}">
+                <span class="font-semibold">Paciente:</span> 
+                <span th:text="${usuaria.nombreCompleto != null ? usuaria.nombreCompleto : 'Nombre no disponible'}">Nombre no disponible</span>
+            </div>
+        </div>
+        
+        <div class="card mb-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                Material Educativo Disponible
+            </h2>
+            <p class="text-gray-600 mb-4">
+                Explora los documentos educativos organizados por categorías. Haz clic en cada categoría para ver los documentos disponibles.
+            </p>
+        </div>
+        
+        <div class="mb-6">
+            <button onclick="toggleDocumentos('documentos1')" 
+                    class="w-full bg-blue-600 text-white p-4 rounded-lg flex justify-between items-center hover:bg-blue-700 documento-btn">
+                <div class="flex items-center">
+                    <i class="fas fa-hand-holding-heart text-2xl mr-4"></i>
+                    <div class="text-left">
+                        <h1 class="font-bold">Campaña Contra Violencia Obstétrica</h1>
+                        <p class="text-sm opacity-90 mt-1">Documentos informativos sobre derechos y prevención</p>
+                    </div>
+                </div>
+                <i id="icon1" class="fas fa-chevron-down transition-transform duration-300"></i>
+            </button>
+            
+            <div id="documentos1" class="hidden bg-gray-50 p-4 rounded-b-lg border border-t-0 acordeon-panel">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <button onclick="verPdfModal('/EducacionMaterna/ViolenciaObstetrica/violencia_obstetrica_cartel.pdf')" 
+				        class="flex items-center p-3 bg-white rounded border hover:border-blue-500 documento-btn">
+					    <i class="fas fa-file-pdf text-red-500 text-2xl mr-3"></i>
+					    <div class="text-left">
+					        <div class="font-semibold">CARTEL INFORMATIVO</div>
+					        <div class="text-sm text-gray-500 mt-1">Campaña contra violencia obstétrica</div>
+					    </div>
+					</button>
+					
+					<button onclick="verPdfModal('/EducacionMaterna/ViolenciaObstetrica/violencia_obstetrica_diptico.pdf')" 
+					        class="flex items-center p-3 bg-white rounded border hover:border-blue-500 documento-btn">
+					    <i class="fas fa-file-pdf text-red-500 text-2xl mr-3"></i>
+					    <div class="text-left">
+					        <div class="font-semibold">DÍPTICO INFORMATIVO</div>
+					        <div class="text-sm text-gray-500 mt-1">Información detallada para pacientes</div>
+					    </div>
+					</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mb-6">
+            <button onclick="toggleDocumentos('documentos2')" 
+                    class="w-full bg-green-600 text-white p-4 rounded-lg flex justify-between items-center hover:bg-green-700 documento-btn">
+                <div class="flex items-center">
+                    <i class="fas fa-baby text-2xl mr-4"></i>
+                    <div class="text-left">
+                        <h1 class="font-bold">Cuidados Prenatales</h1>
+                        <p class="text-sm opacity-90 mt-1">Guías de alimentación, ejercicio y controles médicos</p>
+                    </div>
+                </div>
+                <i id="icon2" class="fas fa-chevron-down transition-transform duration-300"></i>
+            </button>
+            
+            <div id="documentos2" class="hidden bg-gray-50 p-4 rounded-b-lg border border-t-0 acordeon-panel">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Documentos se agregarán aquí -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="mb-6">
+            <button onclick="toggleDocumentos('documentos3')" 
+                    class="w-full bg-purple-600 text-white p-4 rounded-lg flex justify-between items-center hover:bg-purple-700 documento-btn">
+                <div class="flex items-center">
+                    <i class="fas fa-child text-2xl mr-4"></i>
+                    <div class="text-left">
+                        <h1 class="font-bold">Lactancia Materna</h1>
+                        <p class="text-sm opacity-90 mt-1">Guías de lactancia, posiciones y cuidados del bebé</p>
+                    </div>
+                </div>
+                <i id="icon3" class="fas fa-chevron-down transition-transform duration-300"></i>
+            </button>
+            
+            <div id="documentos3" class="hidden bg-gray-50 p-4 rounded-b-lg border border-t-0 acordeon-panel">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Documentos se agregarán aquí -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="mb-6">
+            <button onclick="toggleDocumentos('documentos4')" 
+                    class="w-full bg-orange-600 text-white p-4 rounded-lg flex justify-between items-center hover:bg-orange-700 documento-btn">
+                <div class="flex items-center">
+                    <i class="fas fa-user-nurse text-2xl mr-4"></i>
+                    <div class="text-left">
+                        <h1 class="font-bold">Postparto y Recuperación</h1>
+                        <p class="text-sm opacity-90 mt-1">Cuidados después del parto y recuperación</p>
+                    </div>
+                </div>
+                <i id="icon4" class="fas fa-chevron-down transition-transform duration-300"></i>
+            </button>
+            
+            <div id="documentos4" class="hidden bg-gray-50 p-4 rounded-b-lg border border-t-0 acordeon-panel">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Documentos se agregarán aquí -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <button class="chatbot-btn" onclick="toggleChatbot()">
+        <i class="fas fa-comment-medical"></i>
+        <span class="notification-badge">!</span>
+    </button>
+    
+    <div class="chatbot-container" id="chatbotContainer">
+        <div class="chatbot-header">
+            <span>Asistente de Salud Materna</span>
+            <button class="voice-toggle" id="voiceToggle" onclick="toggleVoice()">
+                <i class="fas fa-volume-up"></i>
+            </button>
+        </div>
+        <div class="chatbot-messages" id="chatMessages">
+            
+        </div>
+        <div class="chatbot-input">
+            <select id="modeSelect">
+                <option value="embarazo">Embarazo</option>
+                <option value="puerperio">Puerperio</option>
+                <option value="general">General</option>
+            </select>
+            <input type="text" id="userInput" placeholder="Escribe tu pregunta..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('active');
+        }
+
+        function checkScreenSize() {
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            if (window.innerWidth <= 576) {
+                mobileMenuBtn.style.display = 'block';
+            } else {
+                mobileMenuBtn.style.display = 'none';
+                document.getElementById('sidebar').classList.remove('active');
+            }
+        }
+
+        window.addEventListener('resize', checkScreenSize);
+        window.addEventListener('load', checkScreenSize);
+
+        function toggleDocumentos(panelId) {
+            const panel = document.getElementById(panelId);
+            const iconId = panelId.replace('documentos', 'icon');
+            const icon = document.getElementById(iconId);
+            
+            // Alternar visibilidad
+            panel.classList.toggle('hidden');
+            
+            // Rotar el ícono
+            if (icon) {
+                icon.classList.toggle('rotate-180');
+            }
+        }
+
+        function verPdfModal(pdfUrl) {
+            Swal.fire({
+                title: 'Visualizando Documento PDF',
+                html: `
+                    <div style="height: 70vh; width: 100%; overflow: auto;">
+                        <iframe src="${pdfUrl}" 
+                                style="width: 100%; height: 100%; border: none;"
+                                title="PDF Document"></iframe>
+                    </div>
+                `,
+                showCloseButton: true,
+                showConfirmButton: false,
+                width: '90%',
+                heightAuto: false,
+                customClass: {
+                    popup: 'pdf-modal'
+                }
+            });
+        }
+
+        function verImagenModal(imageUrl) {
+            Swal.fire({
+                title: 'Visualizando Imagen',
+                imageUrl: imageUrl,
+                imageWidth: '100%',
+                imageAlt: 'Documento educativo',
+                showCloseButton: true,
+                showConfirmButton: false,
+                width: '80%'
+            });
+        }
+
+        function abrirEnNuevaPestana(url, titulo) {
+            window.open(url, '_blank', 'noopener,noreferrer');
+            
+            Swal.fire({
+                position: 'top-end',
+                icon: 'info',
+                title: `Abriendo: ${titulo}`,
+                showConfirmButton: false,
+                timer: 1500,
+                toast: true
+            });
+        }
+
+        // ========== FUNCIONES DEL CHATBOT ==========
+        let voiceEnabled = true;
+        let chatOpened = false;
+        const speech = new SpeechSynthesisUtterance();
+        speech.lang = 'es-US';
+        speech.rate = 0.9;
+        speech.pitch = 1;
+
+        function toggleChatbot() {
+            const chatbot = document.getElementById('chatbotContainer');
+            const notificationBadge = document.querySelector('.notification-badge');
+            
+            chatbot.classList.toggle('visible');
+            
+            if (!chatOpened && chatbot.classList.contains('visible')) {
+                chatOpened = true;
+                notificationBadge.style.display = 'none';
+                
+                setTimeout(() => {
+                    const welcomeMsg = "¡Hola! Soy tu asistente de salud materna. Puedes preguntarme sobre embarazo o puerperio.";
+                    addBotMessage(welcomeMsg);
+                    speakText(welcomeMsg);
+                }, 300);
+            }
+        }
+        
+        function toggleVoice() {
+            voiceEnabled = !voiceEnabled;
+            const voiceButton = document.getElementById('voiceToggle');
+            
+            if (voiceEnabled) {
+                voiceButton.innerHTML = '<i class="fas fa-volume-up"></i>';
+                speakText("Voz activada");
+            } else {
+                voiceButton.innerHTML = '<i class="fas fa-volume-mute"></i>';
+                speakText("Voz desactivada");
+            }
+        }
+        
+        function speakText(text) {
+            if (!voiceEnabled || !('speechSynthesis' in window)) return;
+            
+            window.speechSynthesis.cancel();
+            speech.text = text;
+            window.speechSynthesis.speak(speech);
+        }
+        
+        function addBotMessage(text) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', 'bot-message');
+            messageDiv.textContent = text;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function addUserMessage(text) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', 'user-message');
+            messageDiv.textContent = text;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        async function sendMessage() {
+            const userInput = document.getElementById('userInput');
+            const modeSelect = document.getElementById('modeSelect');
+            
+            if (!userInput.value.trim()) return;
+            
+            addUserMessage(userInput.value);
+            
+            const userMessage = userInput.value;
+            userInput.value = '';
+            
+            try {
+                const response = await fetch('/api/chatbot/responder', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `pregunta=${encodeURIComponent(userMessage)}&categoria=${encodeURIComponent(modeSelect.value)}`
+                });
+                
+                const data = await response.json();
+                
+                setTimeout(() => {
+                    addBotMessage(data.respuesta);
+                    speakText(data.respuesta);
+                }, 500);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                setTimeout(() => {
+                    const errorMsg = "Lo siento, hubo un error al procesar tu pregunta. Por favor, intenta nuevamente.";
+                    addBotMessage(errorMsg);
+                    speakText(errorMsg);
+                }, 500);
+            }
+        }
+        
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // ========== INICIALIZACIÓN ==========
+        document.addEventListener('DOMContentLoaded', function() {
+            checkScreenSize();
+            
+            // Inicializar síntesis de voz si está disponible
+            if ('speechSynthesis' in window) {
+                speechSynthesis.onvoiceschanged = function() {
+                    const voices = speechSynthesis.getVoices();
+                    const spanishVoice = voices.find(voice => 
+                        voice.lang.includes('es') || 
+                        voice.name.includes('Spanish') ||
+                        voice.name.includes('Español')
+                    );
+                    if (spanishVoice) speech.voice = spanishVoice;
+                };
+            } else {
+                voiceEnabled = false;
+                const voiceButton = document.getElementById('voiceToggle');
+                if (voiceButton) voiceButton.style.display = 'none';
+            }
+            
+            // Notificación inicial
+            setTimeout(() => {
+                if (!chatOpened) {
+                    Swal.fire({
+                        position: 'top-end',
+                        icon: 'info',
+                        title: 'Material educativo disponible',
+                        text: 'Explora los documentos en las secciones desplegables',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        toast: true
+                    });
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

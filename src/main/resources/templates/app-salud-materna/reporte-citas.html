@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte de Citas Prenatales</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .sidenav {
+            height: 100%;
+            width: 250px;
+            position: fixed;
+            z-index: 1;
+            top: 0;
+            left: 0;
+            background-color: #f8f9fa;
+            overflow-x: hidden;
+            padding-top: 20px;
+            border-right: 1px solid #dee2e6;
+        }
+        
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+        
+        .nav-link {
+            color: #333;
+            padding: 10px 20px;
+            text-decoration: none;
+            display: block;
+            transition: 0.3s;
+        }
+        
+        .nav-link:hover {
+            background-color: #e9ecef;
+            color: #0d6efd;
+        }
+        
+        .cita-card {
+            border-left: 4px solid #0d6efd;
+        }
+        
+        .cita-completada {
+            border-left: 4px solid #28a745;
+            opacity: 0.9;
+        }
+        
+        .cita-pendiente {
+            border-left: 4px solid #ffc107;
+        }
+        
+        .cita-futura {
+            border-left: 4px solid #17a2b8;
+        }
+        
+        .cita-pasada {
+            border-left: 4px solid #6c757d;
+        }
+        
+        /* Estilos para las tarjetas de citas faltantes */
+        .cita-faltante-card {
+            border: 2px dashed #e5e7eb;
+            background: linear-gradient(135deg, #fef3c7 0%, #fef9c3 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .cita-faltante-card:hover {
+            border-color: #f59e0b;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(245, 158, 11, 0.1);
+        }
+        
+        .badge-faltante {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .user-info {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <div class="sidenav">
+    	
+    	<div class="user-info">
+            <div class="user-avatar">
+                <i class="fas fa-user-md"></i>
+            </div>
+            <div class="user-name">
+                <div class="text-sm text-gray-600 mt-2" th:if="${usuaria}">
+                <a href="/conocimiento-general" th:text="${usuaria?.nombreCompleto ?: 'Usuario'}"></a>
+            </div>
+                <small>Salud Materna</small>
+            </div>
+        </div>
+    	
+    	<!--  
+        <div class="px-4 py-4">
+            <h2 class="text-xl font-bold text-blue-600">Salud Materna</h2>
+        </div>
+        -->
+        <nav class="mt-4">
+            <a href="/app-salud-materna" class="nav-link active">
+                <i class="fas fa-home"></i> Inicio
+            </a>
+            <a href="/app-salud-materna/citas" class="nav-link">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Recomendación de Citas</span>
+            </a>
+            <a href="/app-salud-materna/educacion-materna" class="nav-link">
+                <i class="fas fa-book"></i> Educación Materna
+            </a>
+            <a href="/app-salud-materna/todos-examenes" class="nav-link">
+                <i class="fas fa-heartbeat"></i> Exámenes de Laboratorio
+            </a>
+            <a href="/reporte-citas" class="nav-link">
+                <i class="fas fa-chart-line"></i> Reportes de Citas
+            </a>
+            
+            <a th:href="@{/app-salud-materna/vista/__${usuaria.idUser}__}" 
+			   class="nav-link pdf-highlight" 
+			   target="_blank">
+			    <i class="fas fa-file-pdf"></i> Generar Informe PDF
+			</a>
+
+            <a th:href="@{/logout}" class="nav-link mt-8 text-red-600">
+                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+            </a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="container mx-auto">
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800">📋 Reporte de Citas Prenatales</h1>
+                    <p class="text-gray-600">Registro y seguimiento de tus consultas prenatales</p>
+                </div>
+                <div id="user-info" class="text-right">
+                    <span class="font-semibold text-gray-700" id="user-email"></span>
+                    <a th:href="@{/logout}" class="block text-blue-600 hover:text-blue-800 text-sm">Cerrar sesión</a>
+                </div>
+            </div>
+
+            <!-- Alertas -->
+            <div id="alerta-sin-citas" class="hidden bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-yellow-700">
+                            <strong>¡Atención!</strong> No has calculado tus citas prenatales. 
+                            <a th:href="@{/app-salud-materna/citas}" class="font-semibold underline text-yellow-700 hover:text-yellow-600">
+                                Haz clic aquí para calcular tus citas recomendadas
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información del Embarazo -->
+            <div id="info-embarazo-card" class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 mb-8 shadow-sm hidden">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">📊 Información de tu Embarazo</h2>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="bg-white rounded-lg p-4 text-center shadow-sm">
+                        <div class="text-2xl font-bold text-blue-600" id="semanas-embarazo">0</div>
+                        <div class="text-sm text-gray-600">Semanas</div>
+                    </div>
+                    <div class="bg-white rounded-lg p-4 text-center shadow-sm">
+                        <div class="text-lg font-semibold text-purple-600" id="trimestre">-</div>
+                        <div class="text-sm text-gray-600">Trimestre</div>
+                    </div>
+                    <div class="bg-white rounded-lg p-4 text-center shadow-sm">
+                        <div class="text-xl font-bold text-green-600" id="citas-completadas">0</div>
+                        <div class="text-sm text-gray-600">Citas Completadas</div>
+                    </div>
+                    <div class="bg-white rounded-lg p-4 text-center shadow-sm">
+                        <div class="text-xl font-bold text-orange-600" id="citas-pendientes">0</div>
+                        <div class="text-sm text-gray-600">Citas Pendientes</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de Citas Confirmadas -->
+            <div class="mb-8">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold text-gray-800">📅 Tus Citas Confirmadas</h2>
+                    <button onclick="cargarCitas()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition flex items-center">
+                        <i class="fas fa-sync-alt mr-2"></i> Actualizar
+                    </button>
+                </div>
+                
+                <!-- Filtros -->
+                <div class="flex space-x-4 mb-6">
+                    <button onclick="filtrarCitas('todas')" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center">
+                        <i class="fas fa-list mr-2"></i> Todas
+                    </button>
+                    <button onclick="filtrarCitas('pendientes')" class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition flex items-center">
+                        <i class="fas fa-clock mr-2"></i> Pendientes
+                    </button>
+                    <button onclick="filtrarCitas('completadas')" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition flex items-center">
+                        <i class="fas fa-check-circle mr-2"></i> Completadas
+                    </button>
+                </div>
+
+                <!-- Contenedor de citas -->
+                <div id="lista-citas" class="space-y-4">
+                    <!-- Las citas se cargarán aquí dinámicamente -->
+                </div>
+
+                <!-- Mensaje cuando no hay citas confirmadas -->
+                <div id="mensaje-sin-citas" class="text-center py-12 hidden">
+                    <i class="fas fa-calendar-times text-4xl text-gray-300 mb-4"></i>
+                    <h3 class="text-xl font-semibold text-gray-600 mb-2">No tienes citas confirmadas</h3>
+                    <p class="text-gray-500 mb-4">
+                        Confirma tus citas en el calendario para poder registrar los datos de consulta.
+                    </p>
+                    <a th:href="@{/app-salud-materna/citas}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                        <i class="fas fa-calendar-alt mr-2"></i> Ir al Calendario
+                    </a>
+                </div>
+            </div>
+
+            <!-- Citas Faltantes -->
+            <div class="mt-12 mb-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">📋 Citas Prenatales Faltantes por Confirmar</h2>
+                    <span id="contador-faltantes" class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-semibold hidden">
+                        0 faltantes
+                    </span>
+                </div>
+                
+                <!-- Información sobre citas faltantes -->
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-info-circle text-yellow-400 mt-1"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-yellow-700">
+                                <strong>¿Qué son las citas faltantes?</strong> 
+                                Son las consultas prenatales que aún no has confirmado en el calendario. 
+                                <a href="/app-salud-materna/citas" class="font-semibold underline text-yellow-700 hover:text-yellow-600">
+                                    Ve al calendario para confirmar tus citas.
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Contenedor de citas faltantes -->
+                <div id="citas-faltantes" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Las citas faltantes se cargarán aquí dinámicamente -->
+                </div>
+                
+                <!-- Mensaje cuando no hay citas faltantes -->
+                <div id="mensaje-todas-confirmadas" class="hidden text-center py-8 bg-green-50 rounded-lg border border-green-200">
+                    <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+                        <i class="fas fa-check-circle text-3xl text-green-500"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-green-800 mb-2">¡Excelente!</h3>
+                    <p class="text-green-600">Ya has confirmado todas tus citas prenatales. Continúa con el registro de datos.</p>
+                </div>
+
+                <!-- Mensaje cuando hay citas faltantes -->
+                <div id="mensaje-hay-faltantes" class="hidden mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <div class="flex items-center">
+                        <i class="fas fa-lightbulb text-blue-500 mr-3 text-xl"></i>
+                        <div>
+                            <p class="text-blue-700 text-sm">
+                                <strong>Consejo:</strong> Confirma todas tus citas faltantes para tener un seguimiento completo de tu embarazo.
+                                Cada cita prenatal es importante para monitorear tu salud y la de tu bebé.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estadísticas -->
+            <div id="estadisticas-section" class="bg-gray-50 rounded-xl p-6 mt-8 hidden">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">📈 Progreso de Seguimiento</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white rounded-lg p-5 shadow-sm">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="font-semibold text-gray-700">Citas Totales</h3>
+                            <i class="fas fa-calendar-check text-blue-500"></i>
+                        </div>
+                        <div class="text-3xl font-bold text-gray-800" id="estadistica-total">0</div>
+                        <p class="text-sm text-gray-500 mt-1">Total de citas prenatales recomendadas</p>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg p-5 shadow-sm">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="font-semibold text-gray-700">Confirmadas</h3>
+                            <i class="fas fa-check-circle text-green-500"></i>
+                        </div>
+                        <div class="text-3xl font-bold text-green-600" id="estadistica-confirmadas">0</div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                            <div id="barra-confirmadas" class="bg-green-600 h-2.5 rounded-full" style="width: 0%"></div>
+                        </div>
+                        <p class="text-sm text-gray-500 mt-1" id="porcentaje-confirmadas">0% confirmadas</p>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg p-5 shadow-sm">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="font-semibold text-gray-700">Con Datos</h3>
+                            <i class="fas fa-clipboard-check text-purple-500"></i>
+                        </div>
+                        <div class="text-3xl font-bold text-purple-600" id="estadistica-con-datos">0</div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                            <div id="barra-con-datos" class="bg-purple-600 h-2.5 rounded-full" style="width: 0%"></div>
+                        </div>
+                        <p class="text-sm text-gray-500 mt-1" id="porcentaje-con-datos">0% con datos</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal para registrar/actualizar datos de consulta -->
+            <div id="modal-consulta" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+                <div class="relative top-20 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
+                    <div class="mt-3">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-2xl font-bold text-gray-800" id="modal-titulo">📝 Registrar/Actualizar Datos</h3>
+                            <button onclick="cerrarModal()" class="text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-times text-2xl"></i>
+                            </button>
+                        </div>
+                        
+                        <div id="modal-contenido">
+                            <!-- El formulario se cargará aquí dinámicamente -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+	    <script>
+        let todasLasCitas = []; // Para filtrar
+        let modoActual = ''; // 'registrar' o 'actualizar'
+        let idPrenatalActual = null;
+        let datosActualesCita = {}; // Almacenar datos actuales de la cita
+        
+        $(document).ready(function() {
+            console.log('Página cargada - Inicializando...');
+            cargarInfoEmbarazo();
+            cargarCitas();
+        });
+        
+        
+        function formatearFechaDesdeISO(fechaISO) {
+            if (!fechaISO) return '';
+            
+            const partes = fechaISO.split('-');
+            if (partes.length === 3) {
+                const año = parseInt(partes[0]);
+                const mes = parseInt(partes[1]) - 1; 
+                const dia = parseInt(partes[2]);
+                
+                const fechaLocal = new Date(año, mes, dia, 12, 0, 0);
+                
+                const opciones = { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                };
+                
+                return fechaLocal.toLocaleDateString('es-ES', opciones);
+            }
+            
+            return new Date(fechaISO).toLocaleDateString('es-ES', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+        
+        function formatearFechaCortaDesdeISO(fechaISO) {
+            if (!fechaISO) return '';
+            
+            const partes = fechaISO.split('-');
+            if (partes.length === 3) {
+                const año = partes[0];
+                const mes = partes[1];
+                const dia = partes[2];
+                return `${dia}/${mes}/${año}`;
+            }
+            
+            const fecha = new Date(fechaISO);
+            const dia = String(fecha.getDate()).padStart(2, '0');
+            const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+            const año = fecha.getFullYear();
+            return `${dia}/${mes}/${año}`;
+        }
+        
+        function obtenerComponentesFechaISO(fechaISO) {
+            if (!fechaISO) return null;
+            
+            const partes = fechaISO.split('-');
+            if (partes.length === 3) {
+                return {
+                    año: parseInt(partes[0]),
+                    mes: parseInt(partes[1]) - 1, 
+                    dia: parseInt(partes[2])
+                };
+            }
+            return null;
+        }
+                
+        function cargarInfoEmbarazo() {
+            $.ajax({
+                url: '/api/citas/info-embarazo',
+                method: 'GET',
+                success: function(response) {
+                    console.log('Info embarazo:', response);
+                    
+                    if (response.message) {
+                        $('#alerta-sin-citas').removeClass('hidden');
+                        $('#info-embarazo-card').addClass('hidden');
+                    } else {
+                        $('#alerta-sin-citas').addClass('hidden');
+                        $('#info-embarazo-card').removeClass('hidden');
+                        
+                        $('#semanas-embarazo').text(response.semanasEmbarazo || 0);
+                        $('#trimestre').text(response.trimestre || '-');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error al cargar información de embarazo:', error);
+                }
+            });
+        }
+
+        function cargarCitas() {
+            console.log('Cargando citas...');
+            
+            $.ajax({
+                url: '/api/reporte-citas/consultas',
+                method: 'GET',
+                beforeSend: function() {
+                    $('#lista-citas').html('<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-2xl text-blue-600"></i><p class="mt-2 text-gray-600">Cargando citas...</p></div>');
+                    $('#citas-faltantes').html('<div class="text-center py-8 col-span-3"><i class="fas fa-spinner fa-spin text-2xl text-yellow-600"></i><p class="mt-2 text-gray-600">Cargando citas faltantes...</p></div>');
+                },
+                success: function(response) {
+                    console.log('Respuesta de citas:', response);
+                    
+                    if (response.tieneCitas || response.citasFaltantes) {
+                        $('#estadisticas-section').removeClass('hidden');
+                        actualizarEstadisticas(response);
+                    } else {
+                        $('#estadisticas-section').addClass('hidden');
+                    }
+                    
+                    if (response.tieneCitas === false) {
+                        $('#mensaje-sin-citas').removeClass('hidden');
+                        $('#lista-citas').empty();
+                        $('#citas-faltantes').empty();
+                        $('#mensaje-todas-confirmadas').addClass('hidden');
+                        
+                        if (response.message) {
+                            $('#mensaje-sin-citas h3').text(response.message);
+                            $('#mensaje-sin-citas p').html(response.message + '<br>Calcula tus citas prenatales en la sección correspondiente.');
+                        }
+                        
+                        $('#citas-completadas').text('0');
+                        $('#citas-pendientes').text('0');
+                        
+                        if (response.citasFaltantes && response.citasFaltantes.length > 0) {
+                            cargarCitasFaltantes(response);
+                        }
+                        return;
+                    }
+                    
+                    if (response.citas && response.citas.length > 0) {
+                        $('#mensaje-sin-citas').addClass('hidden');
+                        todasLasCitas = response.citas;
+                        renderizarCitas(todasLasCitas);
+                        
+                        $('#citas-completadas').text(response.completadas || 0);
+                        $('#citas-pendientes').text(response.pendientes || 0);
+                        
+                        console.log('Citas cargadas:', response.citas.length);
+                    } else {
+                        $('#mensaje-sin-citas').removeClass('hidden');
+                        $('#lista-citas').empty();
+                        console.log('No hay citas en la respuesta');
+                    }
+                    
+                    cargarCitasFaltantes(response);
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error al cargar citas:', error);
+                    console.error('Detalles:', xhr.responseText);
+                    
+                    $('#lista-citas').html(`
+                        <div class="text-center py-8 text-red-600">
+                            <i class="fas fa-exclamation-triangle text-3xl mb-4"></i>
+                            <h3 class="text-xl font-semibold">Error al cargar las citas</h3>
+                            <p class="text-gray-600 mt-2">Intenta recargar la página o actualice sus datos</p>
+                        </div>
+                    `);
+                }
+            });
+        }
+
+        function actualizarEstadisticas(response) {
+            const totalCitas = 8; // Total de citas prenatales recomendadas
+            const confirmadas = response.citas ? response.citas.length : 0;
+            const completadas = response.completadas || 0;
+            const faltantes = response.citasFaltantes ? response.citasFaltantes.length : 0;
+            
+            $('#estadistica-total').text(totalCitas);
+            $('#estadistica-confirmadas').text(confirmadas);
+            $('#estadistica-con-datos').text(completadas);
+            
+            const porcentajeConfirmadas = Math.round((confirmadas / totalCitas) * 100);
+            const porcentajeConDatos = confirmadas > 0 ? Math.round((completadas / confirmadas) * 100) : 0;
+            
+            $('#barra-confirmadas').css('width', porcentajeConfirmadas + '%');
+            $('#barra-con-datos').css('width', porcentajeConDatos + '%');
+            
+            $('#porcentaje-confirmadas').text(porcentajeConfirmadas + '% confirmadas');
+            $('#porcentaje-con-datos').text(porcentajeConDatos + '% con datos registrados');
+            
+            if (faltantes > 0) {
+                $('#contador-faltantes').removeClass('hidden').text(faltantes + ' faltantes');
+            } else {
+                $('#contador-faltantes').addClass('hidden');
+            }
+        }
+
+        function cargarCitasFaltantes(response) {
+            const container = $('#citas-faltantes');
+            container.empty();
+            
+            if (response.citasFaltantes && response.citasFaltantes.length > 0) {
+                $('#mensaje-todas-confirmadas').addClass('hidden');
+                $('#mensaje-hay-faltantes').removeClass('hidden');
+                
+                $('h2:contains("Citas Prenatales Faltantes")').html(
+                    `📋 Citas Prenatales Faltantes por Confirmar <span class="text-lg font-normal text-gray-600">(${response.citasFaltantes.length} faltantes)</span>`
+                );
+                
+                response.citasFaltantes.forEach((cita, index) => {
+                    const inicioFormateado = formatearFechaCortaDesdeISO(cita.inicioRango);
+                    const finFormateado = formatearFechaCortaDesdeISO(cita.finRango);
+                    
+                    const inicioSemanas = parseInt(cita.rango.split('-')[0]);
+                    const finSemanas = parseInt(cita.rango.split('-')[cita.rango.split('-').length - 1]);
+                    const semanaPromedio = Math.round((inicioSemanas + finSemanas) / 2);
+                    
+                    const card = `
+                        <div class="cita-faltante-card rounded-xl p-5 hover:shadow-lg transition-all duration-300">
+                            <div class="flex items-start justify-between mb-4">
+                                <div>
+                                    <span class="badge-faltante inline-flex items-center mb-3">
+                                        <i class="far fa-clock mr-1"></i> Por confirmar
+                                    </span>
+                                    <h4 class="font-bold text-gray-800 text-lg mb-1">${cita.nombre}</h4>
+                                    <p class="text-sm text-gray-600">
+                                        <i class="fas fa-baby mr-2"></i>
+                                        Semanas ${cita.rango} (aprox. ${semanaPromedio} semanas)
+                                    </p>
+                                </div>
+                                <div class="text-right">
+                                    <span class="inline-block px-3 py-1 text-xs font-bold bg-yellow-500 text-white rounded-full">
+                                        #${index + 1}
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-3 mb-5">
+                                <div class="flex items-center text-sm text-gray-700">
+                                    <i class="far fa-calendar-alt mr-3 text-yellow-500"></i>
+                                    <div>
+                                        <div class="font-medium">Periodo recomendado:</div>
+                                        <div class="text-gray-800 font-semibold">${inicioFormateado} - ${finFormateado}</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center text-sm text-gray-700">
+                                    <i class="fas fa-exclamation-triangle mr-3 text-red-400"></i>
+                                    <div>
+                                        <div class="font-medium">Importancia:</div>
+                                        <div class="text-gray-800">
+                                            ${obtenerImportanciaCita(cita.rango)}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex space-x-2">
+                                <a href="/app-salud-materna/citas" 
+                                   class="flex-1 text-center px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition font-medium flex items-center justify-center">
+                                    <i class="fas fa-calendar-check mr-2"></i> Confirmar Cita
+                                </a>
+                                <button onclick="mostrarInfoCita('${cita.rango}')" 
+                                        class="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition">
+                                    <i class="fas fa-info-circle"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    container.append(card);
+                });
+                
+            } else {
+                $('#mensaje-todas-confirmadas').removeClass('hidden');
+                $('#mensaje-hay-faltantes').addClass('hidden');
+                
+                $('h2:contains("Citas Prenatales Faltantes")').html(
+                    `✅ Todas las Citas Confirmadas`
+                );
+                
+                container.html(`
+                    <div class="col-span-3">
+                        <div id="mensaje-todas-confirmadas" class="text-center py-8 bg-green-50 rounded-lg border border-green-200">
+                            <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+                                <i class="fas fa-check-circle text-3xl text-green-500"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold text-green-800 mb-2">¡Excelente!</h3>
+                            <p class="text-green-600">Ya has confirmado todas tus citas prenatales. Continúa con el registro de datos.</p>
+                        </div>
+                    </div>
+                `);
+            }
+        }
+
+        function obtenerImportanciaCita(rango) {
+            switch(rango) {
+                case '0-8': return 'Confirmación de embarazo y primera evaluación';
+                case '10-14': return 'Primer ultrasonido y tamizaje';
+                case '16-18': return 'Detección de anomalías tempranas';
+                case '22': return 'Evaluación del crecimiento fetal';
+                case '28': return 'Control de diabetes gestacional';
+                case '32': return 'Evaluación de posición fetal';
+                case '36': return 'Preparación para parto';
+                case '38-41': return 'Seguimiento final y plan de parto';
+                default: return 'Consulta prenatal importante';
+            }
+        }
+
+        function mostrarInfoCita(rango) {
+            const info = {
+                '0-8': 'Primeras semanas: Confirmación de embarazo, cálculo de fecha probable de parto, evaluación inicial de salud.',
+                '10-14': 'Primer trimestre: Ultrasonido para confirmar viabilidad, tamizaje del primer trimestre.',
+                '16-18': 'Segundo trimestre: Evaluación de anatomía fetal, detección de malformaciones.',
+                '22': 'Crecimiento fetal: Medición de estructuras, evaluación de placenta y líquido amniótico.',
+                '28': 'Tercer trimestre: Control de diabetes gestacional, evaluación de crecimiento.',
+                '32': 'Posición fetal: Verificación de presentación, planificación de parto.',
+                '36': 'Preparto: Evaluación final, monitoreo fetal, preparación para parto.',
+                '38-41': 'Término: Seguimiento cercano, monitoreo de bienestar fetal.'
+            };
+            
+            Swal.fire({
+                title: `Cita de ${rango} semanas`,
+                html: `
+                    <div class="text-left">
+                        <p class="mb-3">${info[rango] || 'Consulta prenatal importante para el seguimiento del embarazo.'}</p>
+                        <div class="bg-blue-50 p-3 rounded-lg mt-3">
+                            <p class="text-sm text-blue-700">
+                                <i class="fas fa-lightbulb mr-1"></i>
+                                <strong>Recomendación:</strong> Confirma esta cita para tener un seguimiento completo de tu embarazo.
+                            </p>
+                        </div>
+                    </div>
+                `,
+                icon: 'info',
+                confirmButtonText: 'Ir al Calendario',
+                confirmButtonColor: '#f59e0b',
+                showCancelButton: true,
+                cancelButtonText: 'Cerrar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = '/app-salud-materna/citas';
+                }
+            });
+        }
+
+        function renderizarCitas(citas) {
+            const container = $('#lista-citas');
+            container.empty();
+            
+            if (citas.length === 0) {
+                container.html('<p class="text-center text-gray-500 py-8">No hay citas confirmadas</p>');
+                return;
+            }
+            
+            citas.forEach(cita => {
+                // Obtener componentes de fecha para comparación sin problemas de zona horaria
+                const componentesFecha = obtenerComponentesFechaISO(cita.fechaConsulta);
+                const fecha = componentesFecha ? 
+                    new Date(componentesFecha.año, componentesFecha.mes, componentesFecha.dia) : 
+                    new Date(cita.fechaConsulta);
+                
+                const hoy = new Date();
+                hoy.setHours(0, 0, 0, 0);
+                
+                let estadoClase = 'cita-futura';
+                let estadoTexto = 'Próxima';
+                let estadoColor = 'text-blue-600';
+                let icono = 'far fa-calendar-check';
+                let badgeColor = 'bg-blue-100 text-blue-800';
+                
+                if (cita.completada) {
+                    estadoClase = 'cita-completada';
+                    estadoTexto = 'Completada';
+                    estadoColor = 'text-green-600';
+                    icono = 'fas fa-check-circle';
+                    badgeColor = 'bg-green-100 text-green-800';
+                } else if (fecha < hoy) {
+                    estadoClase = 'cita-pasada';
+                    estadoTexto = 'Atrasada';
+                    estadoColor = 'text-red-600';
+                    icono = 'fas fa-exclamation-circle';
+                    badgeColor = 'bg-red-100 text-red-800';
+                }
+                
+                const fechaFormateada = formatearFechaDesdeISO(cita.fechaConsulta);
+                
+                const rangoInicioFormateado = cita.rangoInicio ? 
+                    formatearFechaCortaDesdeISO(cita.rangoInicio) : '';
+                const rangoFinFormateado = cita.rangoFin ? 
+                    formatearFechaCortaDesdeISO(cita.rangoFin) : '';
+                
+                let datosParaActualizar = '{}';
+                if (cita.completada && cita.datosConsulta) {
+                    try {
+                        datosParaActualizar = JSON.stringify(cita.datosConsulta)
+                            .replace(/'/g, "\\'")
+                            .replace(/"/g, '\\"');
+                    } catch (e) {
+                        console.error('Error al convertir datos:', e);
+                        datosParaActualizar = '{}';
+                    }
+                }
+                
+                const card = `
+                    <div class="cita-card ${estadoClase} bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow duration-300">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-3 mb-2">
+                                    <i class="${icono} text-xl ${estadoColor}"></i>
+                                    <h3 class="text-lg font-semibold text-gray-800">
+                                        Consulta Prenatal ${cita.rangoSemanas ? '- Semanas ' + cita.rangoSemanas : ''}
+                                    </h3>
+                                    <span class="px-3 py-1 text-sm font-semibold rounded-full ${badgeColor}">
+                                        ${estadoTexto}
+                                    </span>
+                                </div>
+                                <p class="text-gray-600 mb-1">
+                                    <i class="far fa-calendar-alt mr-2"></i>
+                                    ${fechaFormateada}
+                                </p>
+                                ${cita.rangoInicio ? `
+                                    <p class="text-gray-600 text-sm">
+                                        <i class="far fa-clock mr-2"></i>
+                                        Rango recomendado: ${rangoInicioFormateado} 
+                                        al ${rangoFinFormateado}
+                                    </p>
+                                ` : ''}
+                            </div>
+                            <div>
+                                ${!cita.completada ? `
+                                    <button onclick="abrirModalRegistro(${cita.idPrenatal}, '${cita.rangoSemanas || ''}', '${cita.fechaConsulta}')" 
+                                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center">
+                                        <i class="fas fa-edit mr-2"></i> Registrar Datos
+                                    </button>
+                                ` : `
+                                    <button onclick="abrirModalActualizar(${cita.idPrenatal}, '${cita.rangoSemanas || ''}', '${cita.fechaConsulta}')" 
+                                            class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition flex items-center">
+                                        <i class="fas fa-pencil-alt mr-2"></i> Actualizar Datos
+                                    </button>
+                                `}
+                            </div>
+                        </div>
+                        
+                        ${cita.completada && cita.datosConsulta && Object.keys(cita.datosConsulta).length > 0 ? `
+                            <div class="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                                <h4 class="font-semibold text-green-800 mb-2 flex items-center">
+                                    <i class="fas fa-clipboard-check mr-2"></i> Datos Registrados
+                                </h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    ${cita.datosConsulta.peso ? `
+                                        <div>
+                                            <span class="text-sm text-gray-600">Peso:</span>
+                                            <p class="font-semibold">${cita.datosConsulta.peso} kg</p>
+                                        </div>
+                                    ` : ''}
+                                    
+                                    ${cita.datosConsulta.imc ? `
+                                        <div>
+                                            <span class="text-sm text-gray-600">IMC:</span>
+                                            <p class="font-semibold">${cita.datosConsulta.imc}</p>
+                                        </div>
+                                    ` : ''}
+                                    
+                                    ${cita.datosConsulta.presionArterial ? `
+                                        <div>
+                                            <span class="text-sm text-gray-600">Presión Arterial:</span>
+                                            <p class="font-semibold">${cita.datosConsulta.presionArterial}</p>
+                                        </div>
+                                    ` : ''}
+                                    
+                                    ${cita.datosConsulta.frecuenciaFetal ? `
+                                        <div>
+                                            <span class="text-sm text-gray-600">Frecuencia Fetal:</span>
+                                            <p class="font-semibold">${cita.datosConsulta.frecuenciaFetal} lpm</p>
+                                        </div>
+                                    ` : ''}
+                                    
+                                    ${cita.datosConsulta.fondoUterino ? `
+                                        <div>
+                                            <span class="text-sm text-gray-600">Fondo Uterino:</span>
+                                            <p class="font-semibold">${cita.datosConsulta.fondoUterino}</p>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                                
+                                ${(cita.datosConsulta.medicamentos && cita.datosConsulta.medicamentos.trim() !== '') || 
+                                  (cita.datosConsulta.datosGenerales && cita.datosConsulta.datosGenerales.trim() !== '') ? `
+                                    <div class="mt-3 pt-3 border-t border-green-200">
+                                        ${cita.datosConsulta.medicamentos && cita.datosConsulta.medicamentos.trim() !== '' ? `
+                                            <div class="mb-2">
+                                                <span class="text-sm text-gray-600 font-medium">Medicamentos:</span>
+                                                <p class="text-sm mt-1">${cita.datosConsulta.medicamentos}</p>
+                                            </div>
+                                        ` : ''}
+                                        
+                                        ${cita.datosConsulta.datosGenerales && cita.datosConsulta.datosGenerales.trim() !== '' ? `
+                                            <div>
+                                                <span class="text-sm text-gray-600 font-medium">Observaciones:</span>
+                                                <p class="text-sm mt-1">${cita.datosConsulta.datosGenerales}</p>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+                
+                container.append(card);
+            });
+        }
+
+        function filtrarCitas(filtro) {
+            let citasFiltradas = [];
+            
+            switch(filtro) {
+                case 'todas':
+                    citasFiltradas = todasLasCitas;
+                    break;
+                case 'pendientes':
+                    citasFiltradas = todasLasCitas.filter(c => !c.completada);
+                    break;
+                case 'completadas':
+                    citasFiltradas = todasLasCitas.filter(c => c.completada);
+                    break;
+                default:
+                    citasFiltradas = todasLasCitas;
+            }
+            
+            renderizarCitas(citasFiltradas);
+            
+            $('#citas-completadas').text(citasFiltradas.filter(c => c.completada).length);
+            $('#citas-pendientes').text(citasFiltradas.filter(c => !c.completada).length);
+        }
+
+        function abrirModalRegistro(idPrenatal, rangoSemanas, fechaConsulta) {
+            const fechaFormateada = formatearFechaDesdeISO(fechaConsulta);
+            
+            $('#modal-titulo').text('📝 Registrar Datos de Consulta');
+            
+            const formulario = `
+                <form id="form-registro-consulta" onsubmit="registrarDatosConsulta(event, ${idPrenatal})">
+                    <div class="mb-6 p-4 bg-blue-50 rounded-lg">
+                        <p class="text-gray-700 mb-1">
+                            <span class="font-semibold">Cita:</span> Consulta Prenatal ${rangoSemanas ? '- Semanas ' + rangoSemanas : ''}
+                        </p>
+                        <p class="text-gray-700">
+                            <span class="font-semibold">Fecha:</span> ${fechaFormateada}
+                        </p>
+                        <p class="text-sm text-blue-600 mt-2">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            El IMC se calculará automáticamente con tu peso y talla registrada
+                        </p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Peso (kg) *
+                                <span class="text-xs text-gray-500">(20-200 kg)</span>
+                            </label>
+                            <input type="number" step="0.1" name="peso" id="input-peso-registro" required 
+                                   min="20" max="200"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                   placeholder="Ej: 65.5">
+                            <p class="text-xs text-gray-500 mt-1">
+                                <i class="fas fa-calculator mr-1"></i>
+                                El IMC se calculará automáticamente al guardar
+                            </p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Presión Arterial *
+                            </label>
+                            <input type="text" name="presionArterial" id="input-presion-registro" 
+                            	   pattern="[0-9]{3}\/[0-9]{2}"
+                                   minlength="6"
+                                   maxlength="6"
+                            	   required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                   placeholder="Ej: 120/80">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Fondo Uterino (cm)
+                            </label>
+                            <input type="number" name="fondoUterino" id="input-fondo-registro"
+                            	   min="7" 
+                             	   max="40"
+                             	   required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                   placeholder="Ej: 28 cm">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Frecuencia Cardíaca Fetal (lpm)
+                            </label>
+                            <input type="number" name="frecuenciaFetal" id="input-frecuencia-registro" min="110" max="190"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                   placeholder="Ej: 140">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Medicamentos Recetados
+                        </label>
+                        <textarea name="medicamentos" id="input-medicamentos-registro" rows="2"
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                  placeholder="Ej: Ácido fólico 400mg, Hierro..."></textarea>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Observaciones / Datos Generales
+                        </label>
+                        <textarea name="datosGenerales" id="input-datos-generales-registro" rows="3"
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                  placeholder="Observaciones importantes de la consulta..."></textarea>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="cerrarModal()" 
+                                class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition">
+                            Cancelar
+                        </button>
+                        <button type="submit" 
+                                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition flex items-center">
+                            <i class="fas fa-save mr-2"></i> Guardar Registro
+                        </button>
+                    </div>
+                </form>
+            `;
+            
+            $('#modal-contenido').html(formulario);
+            $('#modal-consulta').removeClass('hidden');
+        }
+
+        function abrirModalActualizar(idPrenatal, rangoSemanas, fechaConsulta) {
+            console.log('Abriendo modal para actualizar datos de cita:', idPrenatal);
+            
+            const cita = todasLasCitas.find(c => c.idPrenatal === idPrenatal);
+            
+            if (!cita || !cita.datosConsulta) {
+                console.error('No se encontraron datos para esta cita:', idPrenatal);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se encontraron datos para esta cita',
+                    confirmButtonColor: '#d33'
+                });
+                return;
+            }
+            
+            const datosCita = cita.datosConsulta;
+            const fechaFormateada = formatearFechaDesdeISO(fechaConsulta);
+            
+            $('#modal-titulo').text('✏️ Actualizar Datos de Consulta');
+            
+            const peso = datosCita.peso || '';
+            const presion = (datosCita.presionArterial || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            const fondo = (datosCita.fondoUterino || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            const frecuencia = datosCita.frecuenciaFetal || '';
+            const medicamentos = (datosCita.medicamentos || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            const datosGenerales = (datosCita.datosGenerales || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            
+            const formulario = `
+                <form id="form-actualizar-consulta" onsubmit="actualizarDatosConsulta(event, ${idPrenatal})">
+                    <div class="mb-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                        <p class="text-gray-700 mb-1">
+                            <span class="font-semibold">Actualizando datos de:</span> 
+                            Consulta Prenatal ${rangoSemanas ? '- Semanas ' + rangoSemanas : ''}
+                        </p>
+                        <p class="text-gray-700">
+                            <span class="font-semibold">Fecha:</span> ${fechaFormateada}
+                        </p>
+                        <p class="text-sm text-yellow-600 mt-2">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Modifica los datos que necesites. El IMC se recalculará automáticamente.
+                        </p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Peso (kg) *
+                                <span class="text-xs text-gray-500">(20-200 kg)</span>
+                            </label>
+                            <input type="number" step="0.1" name="peso" id="peso-actualizar" required 
+                                   min="20" max="200"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500"
+                                   value="${peso}" 
+                                   placeholder="Ej: 65.5">
+                            <p class="text-xs text-gray-500 mt-1">
+                                <i class="fas fa-calculator mr-1"></i>
+                                El IMC se recalculará automáticamente
+                            </p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Presión Arterial *
+                            </label>
+                            <input type="text" name="presionArterial" id="presion-actualizar" 
+                                   pattern="[0-9]{3}\/[0-9]{2}"
+                                   minlength="6"
+                                   maxlength="6"
+                            	   required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500"
+                                   value="${presion}" 
+                                   placeholder="Ej: 120/80">
+                        </div>
+   
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Fondo Uterino (cm)
+                            </label>
+                            <input type="number" name="fondoUterino" id="fondo-actualizar" 
+                            	   min="7" 
+                            	   max="40"
+                            	   required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500"
+                                   value="${fondo}" 
+                                   placeholder="Ej: 28 cm">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Frecuencia Cardíaca Fetal (lpm)
+                            </label>
+                            <input type="number" name="frecuenciaFetal" id="frecuencia-actualizar" min="110" max="190"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500"
+                                   value="${frecuencia}" 
+                                   placeholder="Ej: 140">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Medicamentos Recetados
+                        </label>
+                        <textarea name="medicamentos" id="medicamentos-actualizar" rows="2"
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500"
+                                  placeholder="Ej: Ácido fólico 400mg, Hierro...">${medicamentos}</textarea>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Observaciones / Datos Generales
+                        </label>
+                        <textarea name="datosGenerales" id="datos-generales-actualizar" rows="3"
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500"
+                                  placeholder="Observaciones importantes de la consulta...">${datosGenerales}</textarea>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="cerrarModal()" 
+                                class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition">
+                            Cancelar
+                        </button>
+                        <button type="submit" 
+                                class="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition flex items-center">
+                            <i class="fas fa-save mr-2"></i> Guardar Cambios
+                        </button>
+                    </div>
+                </form>
+            `;
+            
+            $('#modal-contenido').html(formulario);
+            $('#modal-consulta').removeClass('hidden');
+        }
+
+        function cerrarModal() {
+            $('#modal-consulta').addClass('hidden');
+            modoActual = '';
+            idPrenatalActual = null;
+            datosActualesCita = {};
+        }
+
+        function registrarDatosConsulta(event, idPrenatal) {
+            event.preventDefault();
+            
+            const peso = parseFloat($('#input-peso-registro').val());
+            
+            if (peso < 20 || peso > 200) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Peso inválido',
+                    text: 'El peso debe estar entre 20 y 200 kg',
+                    confirmButtonColor: '#d33'
+                });
+                return;
+            }
+            
+            const formData = {
+                idPrenatal: idPrenatal,
+                peso: peso,
+                presionArterial: $('#input-presion-registro').val(),
+                fondoUterino: $('#input-fondo-registro').val(),
+                frecuenciaFetal: $('#input-frecuencia-registro').val(),
+                medicamentos: $('#input-medicamentos-registro').val(),
+                datosGenerales: $('#input-datos-generales-registro').val()
+            };
+            
+            console.log('Registrando datos:', formData);
+            
+            $.ajax({
+                url: '/api/reporte-citas/registrar-datos',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                beforeSend: function() {
+                    Swal.fire({
+                        title: 'Guardando...',
+                        text: 'Calculando IMC y guardando datos',
+                        allowOutsideClick: false,
+                        didOpen: function() {
+                            Swal.showLoading();
+                        }
+                    });
+                },
+                success: function(response) {
+                    let mensajeHTML = '<div class="text-left">';
+                    mensajeHTML += '<p>' + (response.message || 'Datos registrados correctamente') + '</p>';
+                    
+                    if (response.imc_calculado) {
+                        mensajeHTML += '<div class="mt-3 p-3 bg-green-50 rounded-lg">';
+                        mensajeHTML += '<p class="font-semibold text-green-800 mb-1">IMC Calculado Automáticamente:</p>';
+                        mensajeHTML += '<p><strong>IMC:</strong> ' + response.imc_calculado + '</p>';
+                        if (response.clasificacion_imc) {
+                            mensajeHTML += '<p><strong>Clasificación:</strong> ' + response.clasificacion_imc + '</p>';
+                        }
+                        mensajeHTML += '</div>';
+                    }
+                    
+                    mensajeHTML += '</div>';
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Éxito!',
+                        html: mensajeHTML,
+                        confirmButtonColor: '#3085d6'
+                    }).then(function() {
+                        cerrarModal();
+                        cargarCitas();
+                    });
+                },
+                error: function(xhr, status, error) {
+                    let errorMsg = 'Error al registrar los datos';
+                    
+                    if (xhr.responseJSON && xhr.responseJSON.error) {
+                        errorMsg = xhr.responseJSON.error;
+                    }
+                    
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: errorMsg,
+                        confirmButtonColor: '#d33'
+                    });
+                }
+            });
+        }
+
+        function actualizarDatosConsulta(event, idPrenatal) {
+            event.preventDefault();
+            
+            const peso = parseFloat($('#peso-actualizar').val());
+            
+            // Validar peso en frontend
+            if (peso < 20 || peso > 200) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Peso inválido',
+                    text: 'El peso debe estar entre 20 y 200 kg',
+                    confirmButtonColor: '#d33'
+                });
+                return;
+            }
+            
+            const formData = {
+                peso: peso,
+                presionArterial: $('#presion-actualizar').val(),
+                fondoUterino: $('#fondo-actualizar').val(),
+                frecuenciaFetal: $('#frecuencia-actualizar').val(),
+                medicamentos: $('#medicamentos-actualizar').val(),
+                datosGenerales: $('#datos-generales-actualizar').val()
+            };
+            
+            console.log('Actualizando datos para cita', idPrenatal, ':', formData);
+            
+            $.ajax({
+                url: '/api/reporte-citas/actualizar-datos/' + idPrenatal,
+                method: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                beforeSend: function() {
+                    Swal.fire({
+                        title: 'Actualizando...',
+                        text: 'Recalculando IMC y guardando cambios',
+                        allowOutsideClick: false,
+                        didOpen: function() {
+                            Swal.showLoading();
+                        }
+                    });
+                },
+                success: function(response) {
+                    let mensajeHTML = '<div class="text-left">';
+                    mensajeHTML += '<p>' + (response.message || 'Datos actualizados correctamente') + '</p>';
+                    
+                    if (response.imc_calculado) {
+                        mensajeHTML += '<div class="mt-3 p-3 bg-green-50 rounded-lg">';
+                        mensajeHTML += '<p class="font-semibold text-green-800 mb-1">IMC Recalculado:</p>';
+                        mensajeHTML += '<p><strong>IMC:</strong> ' + response.imc_calculado + '</p>';
+                        if (response.clasificacion_imc) {
+                            mensajeHTML += '<p><strong>Clasificación:</strong> ' + response.clasificacion_imc + '</p>';
+                        }
+                        if (response.datos_actualizados?.fecha_actualizacion) {
+                            mensajeHTML += '<p><strong>Fecha de actualización:</strong> ' + 
+                                          new Date(response.datos_actualizados.fecha_actualizacion).toLocaleDateString('es-ES') + '</p>';
+                        }
+                        mensajeHTML += '</div>';
+                    }
+                    
+                    mensajeHTML += '</div>';
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Actualizado!',
+                        html: mensajeHTML,
+                        confirmButtonColor: '#3085d6'
+                    }).then(function() {
+                        cerrarModal();
+                        cargarCitas();
+                    });
+                },
+                error: function(xhr, status, error) {
+                    let errorMsg = 'Error al actualizar los datos';
+                    
+                    if (xhr.responseJSON && xhr.responseJSON.error) {
+                        errorMsg = xhr.responseJSON.error;
+                    }
+                    
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: errorMsg,
+                        confirmButtonColor: '#d33'
+                    });
+                }
+            });
+        }
+    </script>
+</body>
+</html>

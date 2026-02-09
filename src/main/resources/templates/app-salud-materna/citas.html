@@ -1,0 +1,1838 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Citas - Salud Materna</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css">
+    <style>
+        /* Estilos del sidebar - Igual que index.html */
+        .sidenav {
+            height: 100%;
+            width: 250px;
+            position: fixed;
+            z-index: 1;
+            top: 0;
+            left: 0;
+            background-color: #f8f9fa;
+            overflow-x: hidden;
+            padding-top: 20px;
+            border-right: 1px solid #dee2e6;
+        }
+        
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+        
+        .nav-link {
+            color: #333;
+            padding: 10px 20px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: 0.3s;
+            border-left: 3px solid transparent;
+        }
+        
+        .nav-link:hover {
+            background-color: #e9ecef;
+            color: #0d6efd;
+            border-left-color: #0d6efd;
+        }
+        
+        .nav-link.active {
+            background-color: #e3f2fd;
+            color: #0d6efd;
+            border-left-color: #0d6efd;
+            font-weight: 600;
+        }
+        
+        .nav-link i {
+            width: 20px;
+            text-align: center;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .btn-primary {
+            background-color: #1e40af;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary:hover {
+            background-color: #1e3a8a;
+        }
+        
+        .btn-primary:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+        
+        /* Estilos específicos para citas */
+        .mestruacion-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border-left: 4px solid #1e40af;
+        }
+        
+        .info-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        #calendar {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        /* Estilos para botones de vista del calendario */
+        .calendar-view-btn {
+            padding: 8px 15px;
+            border: 1px solid #1e40af;
+            background: white;
+            color: #1e40af;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .calendar-view-btn.active {
+            font-weight: bold;
+            transform: scale(1.05);
+        }
+
+        .calendar-view-btn.active[data-view="completo"] {
+            background: #1e40af !important;
+            color: white !important;
+        }
+
+        .calendar-view-btn.active[data-view="consultas"] {
+            background: #1e40af !important;
+            color: white !important;
+        }
+
+        .calendar-view-btn.active[data-view="ultrasonidos"] {
+            background: #dc2626 !important;
+            color: white !important;
+            border-color: #dc2626;
+        }
+
+        .calendar-view-btn:hover {
+            transform: scale(1.05);
+            transition: transform 0.2s;
+        }
+
+        /* Estilos para fechas clickeables en el calendario */
+        .fc-daygrid-day-frame {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .fc-daygrid-day-frame:hover {
+            background-color: #f0f9ff;
+        }
+
+        /* Estilos del modal simplificado */
+        .modal-cita-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid #1e40af;
+        }
+
+        .cita-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin: 8px 0;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .cita-item:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .cita-item.selected {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .cita-item[data-tipo="prenatal"].selected {
+            background: linear-gradient(135deg, #1e40af, #3b82f6);
+            color: white;
+            border: 2px solid #1e40af;
+        }
+
+        .cita-item[data-tipo="ultrasonido"].selected {
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+            color: white;
+            border: 2px solid #dc2626;
+        }
+
+        .cita-item.both-selected {
+            background: linear-gradient(135deg, #9333ea, #8b5cf6);
+            color: white;
+            border: 2px solid #9333ea;
+        }
+
+        .cita-icon {
+            font-size: 20px;
+            margin-right: 12px;
+            width: 30px;
+            text-align: center;
+        }
+
+        .cita-details {
+            flex: 1;
+        }
+
+        .cita-title {
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .cita-description {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .checkbox-container {
+            margin-left: 10px;
+        }
+
+        .checkbox-container input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        /* Botones de confirmar cita */
+        .btn-success {
+            background-color: #10b981;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .btn-success:hover {
+            background-color: #059669;
+        }
+
+        .btn-success:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .btn-success-combinado {
+            background: linear-gradient(135deg, #10b981, #3b82f6);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .btn-success-combinado:hover {
+            background: linear-gradient(135deg, #059669, #1e40af);
+        }
+
+        /* Estilos para indicador de selección múltiple */
+        .seleccion-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #f0f9ff;
+            border-radius: 5px;
+            margin-top: 10px;
+            border-left: 4px solid #9333ea;
+        }
+
+        .contador-seleccion {
+            font-weight: bold;
+            color: #9333ea;
+        }
+
+        /* NUEVOS ESTILOS PARA LA SECCIÓN DE CITAS PROGRAMADAS */
+        .progress-container {
+            margin: 10px 0;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background-color: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        .progress-fill.blue {
+            background: linear-gradient(90deg, #3b82f6, #1e40af);
+        }
+        
+        .progress-fill.red {
+            background: linear-gradient(90deg, #ef4444, #dc2626);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge-blue {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .badge-red {
+            background-color: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .badge-green {
+            background-color: #d1fae5;
+            color: #059669;
+        }
+        /* FIN DE NUEVOS ESTILOS */
+
+        /* Estilos del chatbot - Mantenemos los originales */
+        .chatbot-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1e40af;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 1000;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: red;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .chatbot-container {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 350px;
+            height: 500px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            display: none;
+            flex-direction: column;
+            z-index: 1000;
+        }
+        
+        .chatbot-container.visible {
+            display: flex;
+        }
+        
+        .chatbot-header {
+            background: #1e40af;
+            color: white;
+            padding: 15px;
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .voice-toggle {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .chatbot-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .message {
+            padding: 10px 15px;
+            border-radius: 15px;
+            max-width: 80%;
+        }
+        
+        .user-message {
+            background: #1e40af;
+            color: white;
+            align-self: flex-end;
+        }
+        
+        .bot-message {
+            background: #f1f1f1;
+            color: #333;
+            align-self: flex-start;
+        }
+        
+        .chatbot-input {
+            padding: 15px;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .chatbot-input select,
+        .chatbot-input input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .chatbot-input button {
+            background: #1e40af;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 15px;
+            cursor: pointer;
+        }
+
+        /* Modal de confirmación */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            max-width: 450px;
+            width: 90%;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidenav {
+                width: 200px;
+            }
+            
+            .main-content {
+                margin-left: 200px;
+                padding: 15px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .sidenav {
+                width: 0;
+                position: fixed;
+                z-index: 1000;
+                transition: 0.3s;
+            }
+            
+            .sidenav.active {
+                width: 200px;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                z-index: 1001;
+                background: #1e40af;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                padding: 10px;
+                cursor: pointer;
+            }
+        }
+        
+        .user-info {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Botón para menú móvil -->
+    <button class="mobile-menu-btn" id="mobileMenuBtn" style="display: none;" onclick="toggleMobileMenu()">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Sidebar Navigation - Igual que index.html -->
+    <div class="sidenav" id="sidebar">
+    
+    	<div class="user-info">
+            <div class="user-avatar">
+                <i class="fas fa-user-md"></i>
+            </div>
+            <div class="user-name">
+                <div class="text-sm text-gray-600 mt-2" th:if="${usuaria}">
+                <a href="/conocimiento-general" th:text="${usuaria?.nombreCompleto ?: 'Usuario'}"></a>
+            </div>
+                <small>Salud Materna</small>
+            </div>
+        </div>
+    
+    	<!-- 
+        <div class="px-4 py-4">
+            <h2 class="text-xl font-bold text-blue-600">Salud Materna</h2>
+            <div class="text-sm text-gray-600 mt-2" th:if="${usuaria}">
+                <span th:text="${usuaria?.nombreCompleto ?: 'Usuario'}"></span>
+            </div>
+        </div>
+        -->
+        
+		<nav class="mt-4">
+            <a href="/app-salud-materna" class="nav-link active">
+                <i class="fas fa-home"></i> Inicio
+            </a>
+            <a href="/app-salud-materna/citas" class="nav-link">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Recomendación de Citas</span>
+            </a>
+            <a href="/app-salud-materna/educacion-materna" class="nav-link">
+                <i class="fas fa-book"></i> Educación Materna
+            </a>
+            <a href="/app-salud-materna/todos-examenes" class="nav-link">
+                <i class="fas fa-heartbeat"></i> Exámenes de Laboratorio
+            </a>
+            <a href="/reporte-citas" class="nav-link">
+                <i class="fas fa-chart-line"></i> Reportes de Citas
+            </a>
+            
+            <a th:href="@{/app-salud-materna/vista/__${usuaria.idUser}__}" 
+			   class="nav-link pdf-highlight" 
+			   target="_blank">
+			    <i class="fas fa-file-pdf"></i> Generar Informe PDF
+			</a>
+
+            <a th:href="@{/logout}" class="nav-link mt-8 text-red-600">
+                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+            </a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">
+                <i class="fas fa-calendar-alt text-blue-600 mr-2"></i>
+                Recomendación de Citas
+            </h1>
+            <div class="text-sm text-gray-600" th:if="${usuaria}">
+                <span class="font-semibold">Paciente:</span> 
+                <span th:text="${usuaria?.nombreCompleto ?: 'Nombre no disponible'}"></span>
+            </div>
+        </div>
+
+        <div th:if="${success}" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+            <i class="fas fa-check-circle mr-2"></i>
+            <span th:text="${success}"></span>
+        </div>
+        
+        <div th:if="${error}" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            <i class="fas fa-exclamation-circle mr-2"></i>
+            <span th:text="${error}"></span>
+        </div>
+
+        <!-- Sección para registrar última menstruación -->
+        <div class="card mestruacion-section">
+            <h3 class="text-lg font-semibold text-gray-800 mb-3">
+                <i class="fas fa-calculator text-blue-600 mr-2"></i>
+                Configurar Fechas de Consulta
+            </h3>
+            <p class="text-gray-600 mb-4">Ingresa la fecha de tu última menstruación para calcular tus citas prenatales y ultrasonidos, estas fechas son dentro de un rango para que puedas ingresar tus citas.</p>
+            
+            <div class="flex flex-col md:flex-row md:items-end gap-4">
+                <div class="flex-1">
+                    <label for="fechaMestruacion" class="block mb-2 font-semibold text-gray-700">
+                        <i class="fas fa-calendar-day mr-1"></i> Última menstruación:
+                    </label>
+                    <input type="date" id="fechaMestruacion" 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <button onclick="actualizarMestruacion()" class="btn-primary" id="btnActualizar">
+                    <i class="fas fa-calculator"></i> Calcular Citas
+                </button>
+            </div>
+            
+            <div id="mestruacion-info" class="mt-4"></div>
+        </div>
+
+        <div class="card">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                <i class="fas fa-chart-line text-blue-600 mr-2"></i>
+                Información de tu Embarazo
+            </h3>
+            <div id="embarazo-info">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin mr-2"></i> Cargando información...
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                <i class="fas fa-tasks text-blue-600 mr-2"></i>
+                Citas Programadas
+            </h3>
+            
+            <!-- Contadores principales -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <!-- Consultas Prenatales -->
+                <div class="bg-gradient-to-r from-blue-50 to-blue-100 p-6 rounded-xl border border-blue-200">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <div class="font-bold text-blue-800 text-lg mb-1">
+                                <i class="fas fa-user-md mr-2"></i>Consultas Prenatales
+                            </div>
+                            <div class="text-gray-700">
+                                <span class="text-3xl font-bold" id="consultasConfirmadas">0</span>
+                                <span class="text-gray-600"> de 8 confirmadas</span>
+                            </div>
+                        </div>
+                        <div class="text-4xl text-blue-400">
+                            <i class="fas fa-stethoscope"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="progress-container">
+                        <div class="flex justify-between text-sm text-gray-600 mb-1">
+                            <span>Progreso</span>
+                            <span id="consultasPorcentaje">0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill blue" id="consultasProgress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Ultrasonidos -->
+                <div class="bg-gradient-to-r from-red-50 to-red-100 p-6 rounded-xl border border-red-200">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <div class="font-bold text-red-800 text-lg mb-1">
+                                <i class="fas fa-procedures mr-2"></i>Ultrasonidos
+                            </div>
+                            <div class="text-gray-700">
+                                <span class="text-3xl font-bold" id="ultrasonidosConfirmados">0</span>
+                                <span class="text-gray-600"> de 3 confirmados</span>
+                            </div>
+                        </div>
+                        <div class="text-4xl text-red-400">
+                            <i class="fas fa-heartbeat"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="progress-container">
+                        <div class="flex justify-between text-sm text-gray-600 mb-1">
+                            <span>Progreso</span>
+                            <span id="ultrasonidosPorcentaje">0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill red" id="ultrasonidosProgress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Lista de citas específicas -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Lista de consultas prenatales -->
+                <div>
+                    <h4 class="font-semibold text-blue-700 mb-3 flex items-center">
+                        <i class="fas fa-list-ol mr-2"></i> Consultas Prenatales (8)
+                    </h4>
+                    <div id="listaConsultasPrenatales" class="space-y-2">
+                        <div class="text-center text-gray-500 py-4">
+                            <i class="fas fa-spinner fa-spin mr-2"></i> Cargando...
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Lista de ultrasonidos -->
+                <div>
+                    <h4 class="font-semibold text-red-700 mb-3 flex items-center">
+                        <i class="fas fa-list-ol mr-2"></i> Ultrasonidos (3)
+                    </h4>
+                    <div id="listaUltrasonidos" class="space-y-2">
+                        <div class="text-center text-gray-500 py-4">
+                            <i class="fas fa-spinner fa-spin mr-2"></i> Cargando...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controles de Vista del Calendario -->
+        <div class="card">
+            <div class="flex flex-col md:flex-row md:items-center justify-between mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 md:mb-0">
+                    <i class="fas fa-calendar text-blue-600 mr-2"></i>
+                    Calendario de Citas
+                </h3>
+                <div class="flex flex-wrap gap-2">
+                    <button class="calendar-view-btn active" data-view="completo" 
+                            onclick="cambiarVistaCalendario('completo')">
+                        <i class="fas fa-calendar-alt mr-1"></i> Todas las Citas
+                    </button>
+                    <button class="calendar-view-btn" data-view="consultas" 
+                            onclick="cambiarVistaCalendario('consultas')">
+                        <i class="fas fa-user-md mr-1"></i> Solo Consultas
+                    </button>
+                    <button class="calendar-view-btn" data-view="ultrasonidos" 
+                            onclick="cambiarVistaCalendario('ultrasonidos')">
+                        <i class="fas fa-procedures mr-1"></i> Solo Ultrasonidos
+                    </button>
+                </div>
+            </div>
+
+            <!-- Calendario -->
+            <div id="calendar"></div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación de Cita -->
+    <div id="confirmacionModal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4 border-b border-gray-200 pb-3">
+                <h3 class="text-lg font-semibold text-blue-600 m-0">
+                    <i class="fas fa-calendar-check mr-2"></i> Confirmar Citas
+                </h3>
+                <span class="close text-2xl text-gray-600 cursor-pointer" onclick="cerrarModal()">&times;</span>
+            </div>
+            
+            <div class="modal-cita-info">
+                <div class="text-center mb-4">
+                    <div class="text-lg font-bold text-blue-600" id="modalFecha"></div>
+                    <div class="text-gray-600 text-sm" id="modalTipoCita">
+                        Selecciona las citas que deseas confirmar para esta fecha:
+                    </div>
+                </div>
+                
+                <div id="citasEnFecha">
+                    <!-- Las citas detectadas se mostrarán aquí -->
+                </div>
+                
+                <div id="seleccionInfo" class="seleccion-info" style="display: none;">
+                    <div class="contador-seleccion" id="contadorSeleccion">0 citas seleccionadas</div>
+                    <div class="text-gray-600 text-sm">Puedes seleccionar ambas</div>
+                </div>
+                
+                <div class="bg-blue-50 p-3 rounded-lg border-l-4 border-green-500 mt-4">
+                    <p class="text-gray-600 text-sm m-0">
+                        <i class="fas fa-info-circle mr-2"></i> 
+                        Puedes seleccionar una o ambas citas para esta fecha
+                    </p>
+                </div>
+            </div>
+            
+            <div class="flex gap-3 justify-center mt-5">
+                <button onclick="cerrarModal()" 
+                        class="px-4 py-2 border border-gray-300 bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition">
+                    Cancelar
+                </button>
+                <button onclick="confirmarCitas()" id="btnConfirmarCita" class="btn-success" style="display: none;">
+                    <i class="fas fa-calendar-check mr-2"></i> Confirmar Citas
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botón del chatbot integrado -->
+    <button class="chatbot-btn" onclick="toggleChatbot()">
+        <i class="fas fa-comment-medical"></i>
+        <span class="notification-badge">!</span>
+    </button>
+    
+    <!-- Contenedor del chatbot integrado -->
+    <div class="chatbot-container" id="chatbotContainer">
+        <div class="chatbot-header">
+            <span>Asistente de Salud Materna</span>
+            <button class="voice-toggle" id="voiceToggle" onclick="toggleVoice()">
+                <i class="fas fa-volume-up"></i>
+            </button>
+        </div>
+        <div class="chatbot-messages" id="chatMessages">
+            <!-- Los mensajes se agregarán aquí dinámicamente -->
+        </div>
+        <div class="chatbot-input">
+            <select id="modeSelect">
+                <option value="embarazo">Embarazo</option>
+                <option value="puerperio">Puerperio</option>
+                <option value="general">General</option>
+            </select>
+            <input type="text" id="userInput" placeholder="Escribe tu pregunta..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- FullCalendar JS -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/es.js"></script>
+
+    <script>
+        // Variables globales
+        let voiceEnabled = true;
+        let chatOpened = false;
+        let calendar;
+        let currentCalendarView = 'completo';
+        const speech = new SpeechSynthesisUtterance();
+        speech.lang = 'es-US';
+        speech.rate = 0.9;
+        speech.pitch = 1;
+        let voicesLoaded = false;
+
+        // Variables para las citas seleccionadas
+        let fechaSeleccionada = null;
+        let citasSeleccionadas = {
+            prenatal: { seleccionada: false, rango: null },
+            ultrasonido: { seleccionada: false, rango: null }
+        };
+
+        // NUEVAS VARIABLES: Lista de citas específicas
+        const citasPrenatalesEspecificas = [
+            { numero: 1, nombre: "Primera cita prenatal", rango: "0-8", confirmada: false, fecha: null },
+            { numero: 2, nombre: "Segunda cita prenatal", rango: "10-14", confirmada: false, fecha: null },
+            { numero: 3, nombre: "Tercera cita prenatal", rango: "16-18", confirmada: false, fecha: null },
+            { numero: 4, nombre: "Cuarta cita prenatal", rango: "22", confirmada: false, fecha: null },
+            { numero: 5, nombre: "Quinta cita prenatal", rango: "28", confirmada: false, fecha: null },
+            { numero: 6, nombre: "Sexta cita prenatal", rango: "32", confirmada: false, fecha: null },
+            { numero: 7, nombre: "Séptima cita prenatal", rango: "36", confirmada: false, fecha: null },
+            { numero: 8, nombre: "Octava cita prenatal", rango: "38-41", confirmada: false, fecha: null }
+        ];
+
+        const ultrasonidosEspecificos = [
+            { numero: 1, nombre: "Primer ultrasonido", rango: "10-14", confirmada: false, fecha: null },
+            { numero: 2, nombre: "Segundo ultrasonido", rango: "18-24", confirmada: false, fecha: null },
+            { numero: 3, nombre: "Tercer ultrasonido", rango: "29-30", confirmada: false, fecha: null }
+        ];
+
+        // ========== FUNCIONES DE NAVEGACIÓN RESPONSIVE ==========
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('active');
+        }
+
+        // Verificar tamaño de pantalla
+        function checkScreenSize() {
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            if (window.innerWidth <= 576) {
+                mobileMenuBtn.style.display = 'block';
+            } else {
+                mobileMenuBtn.style.display = 'none';
+                document.getElementById('sidebar').classList.remove('active');
+            }
+        }
+
+        window.addEventListener('resize', checkScreenSize);
+        window.addEventListener('load', checkScreenSize);
+
+        // ========== FUNCIONES DE CITAS ==========
+        async function actualizarMestruacion() {
+            const fechaInput = document.getElementById('fechaMestruacion');
+            const infoDiv = document.getElementById('mestruacion-info');
+            const btnActualizar = document.getElementById('btnActualizar');
+            
+            if (!fechaInput.value) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Fecha requerida',
+                    text: 'Por favor selecciona la fecha de tu última menstruación'
+                });
+                return;
+            }
+
+            btnActualizar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Calculando...';
+            btnActualizar.disabled = true;
+
+            try {
+                const response = await fetch('/api/citas/actualizar-mestruacion', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `fechaMestruacion=${fechaInput.value}`
+                });
+
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    infoDiv.innerHTML = `
+                        <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
+                            <i class="fas fa-check-circle mr-2"></i> ✅ ${result.message}
+                        </div>
+                    `;
+                    
+                    cargarInfoEmbarazo();
+                    if (calendar) {
+                        calendar.refetchEvents();
+                    }
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Éxito!',
+                        text: result.message,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                } else {
+                    infoDiv.innerHTML = `
+                        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                            <i class="fas fa-exclamation-circle mr-2"></i> ❌ ${result.message}
+                        </div>
+                    `;
+                    
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: result.message
+                    });
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                infoDiv.innerHTML = `
+                    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                        <i class="fas fa-exclamation-circle mr-2"></i> ❌ Error al conectar con el servidor
+                    </div>
+                `;
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de conexión',
+                    text: 'No se pudo conectar con el servidor'
+                });
+            } finally {
+                btnActualizar.innerHTML = '<i class="fas fa-calculator"></i> Calcular Citas';
+                btnActualizar.disabled = false;
+            }
+        }
+
+        async function cargarInfoEmbarazo() {
+            try {
+                const response = await fetch('/api/citas/info-embarazo');
+                const data = await response.json();
+                
+                if (response.ok && data.ultimaMestruacion) {
+                    const infoDiv = document.getElementById('embarazo-info');
+                    
+                    const fechaMestruacion = new Date(data.ultimaMestruacion + 'T00:00:00');
+                    const fechaParto = new Date(data.fechaParto + 'T00:00:00');
+                    
+                    const formatoFecha = (fecha) => {
+                        return fecha.toLocaleDateString('es-ES', {
+                            timeZone: 'UTC', // Forzar UTC
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit'
+                        });
+                    };
+                    
+                    infoDiv.innerHTML = `
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div class="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500">
+                                <div class="font-semibold text-blue-700 mb-1">📅 Última menstruación:</div>
+                                <div class="text-gray-800">${formatoFecha(fechaMestruacion)}</div>
+                            </div>
+                            <div class="bg-green-50 p-4 rounded-lg border-l-4 border-green-500">
+                                <div class="font-semibold text-green-700 mb-1">🕐 Semanas de embarazo:</div>
+                                <div class="text-gray-800">${data.semanasEmbarazo} semanas</div>
+                            </div>
+                            <div class="bg-purple-50 p-4 rounded-lg border-l-4 border-purple-500">
+                                <div class="font-semibold text-purple-700 mb-1">👶 Fecha probable de parto:</div>
+                                <div class="text-gray-800">${formatoFecha(fechaParto)}</div>
+                            </div>
+                            <div class="bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-500">
+                                <div class="font-semibold text-yellow-700 mb-1">📊 Trimestre:</div>
+                                <div class="text-gray-800">${data.trimestre}</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.getElementById('fechaMestruacion').value = data.ultimaMestruacion;
+                    await actualizarContadoresCitas();
+                }
+            } catch (error) {
+                console.error('Error al cargar información:', error);
+            }
+        }
+
+        async function actualizarContadoresCitas() {
+    try {
+        console.log("Obteniendo contadores de citas...");
+        const response = await fetch('/api/citas/contadores-citas');
+        
+        if (response.ok) {
+            const data = await response.json();
+            console.log("Datos de contadores:", data);
+            
+            // Verificar si hay datos
+            if (data.error) {
+                console.warn("Error en contadores:", data.error);
+                return;
+            }
+            
+            // Actualizar contadores principales
+            const consultasConfirmadas = data.totalConsultasConfirmadas || 0;
+            const ultrasonidosConfirmados = data.totalUltrasonidosConfirmados || 0;
+            const totalConsultas = data.totalConsultasEsperadas || 8;
+            const totalUltrasonidos = data.totalUltrasonidosEsperados || 3;
+            
+            document.getElementById('consultasConfirmadas').textContent = consultasConfirmadas;
+            document.getElementById('ultrasonidosConfirmados').textContent = ultrasonidosConfirmados;
+            
+            // Calcular porcentajes
+            const consultasPorcentaje = totalConsultas > 0 ? 
+                Math.round((consultasConfirmadas / totalConsultas) * 100) : 0;
+            const ultrasonidosPorcentaje = totalUltrasonidos > 0 ? 
+                Math.round((ultrasonidosConfirmados / totalUltrasonidos) * 100) : 0;
+            
+            document.getElementById('consultasPorcentaje').textContent = `${consultasPorcentaje}%`;
+            document.getElementById('ultrasonidosPorcentaje').textContent = `${ultrasonidosPorcentaje}%`;
+            document.getElementById('consultasProgress').style.width = `${consultasPorcentaje}%`;
+            document.getElementById('ultrasonidosProgress').style.width = `${ultrasonidosPorcentaje}%`;
+            
+            // Actualizar listas de citas si existen
+            if (data.consultasPrenatales && data.ultrasonidos) {
+                actualizarListasCitas(data.consultasPrenatales, data.ultrasonidos);
+            }
+            
+            console.log(`Contadores actualizados: ${consultasConfirmadas}/${totalConsultas} consultas, ${ultrasonidosConfirmados}/${totalUltrasonidos} ultrasonidos`);
+        } else {
+            console.error("Error en respuesta del servidor");
+        }
+    } catch (error) {
+        console.error('Error al actualizar contadores:', error);
+    }
+}
+
+function actualizarListasCitas(consultasData, ultrasonidosData) {
+    // Actualizar lista de consultas prenatales
+    const listaConsultas = document.getElementById('listaConsultasPrenatales');
+    if (listaConsultas) {
+        let htmlConsultas = '';
+        
+        if (consultasData && Array.isArray(consultasData) && consultasData.length > 0) {
+            consultasData.forEach(cita => {
+                const estado = cita.confirmada ? 
+                    `<span class="badge badge-green ml-2"><i class="fas fa-check mr-1"></i> Confirmada</span>` :
+                    `<span class="badge badge-blue ml-2"><i class="fas fa-clock mr-1"></i> Pendiente</span>`;
+                
+                const fechaTexto = cita.fecha ? 
+                    `<div class="text-xs text-gray-500 mt-1">${new Date(cita.fecha).toLocaleDateString('es-ES')}</div>` : '';
+                
+                htmlConsultas += `
+                    <div class="p-3 bg-white rounded border border-gray-200">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="text-sm font-medium text-gray-800">
+                                    ${cita.numero}. ${cita.nombre}
+                                </div>
+                                <div class="text-xs text-gray-600 mt-1">
+                                    <i class="fas fa-calendar-week mr-1"></i> Rango: ${cita.rango} semanas
+                                </div>
+                                ${fechaTexto}
+                            </div>
+                            ${estado}
+                        </div>
+                    </div>
+                `;
+            });
+        } else {
+            htmlConsultas = '<div class="text-center text-gray-500 py-4">No hay datos de consultas disponibles</div>';
+        }
+        
+        listaConsultas.innerHTML = htmlConsultas;
+    }
+    
+    // Actualizar lista de ultrasonidos
+    const listaUltrasonidos = document.getElementById('listaUltrasonidos');
+    if (listaUltrasonidos) {
+        let htmlUltrasonidos = '';
+        
+        if (ultrasonidosData && Array.isArray(ultrasonidosData) && ultrasonidosData.length > 0) {
+            ultrasonidosData.forEach(ultrasonido => {
+                const estado = ultrasonido.confirmada ? 
+                    `<span class="badge badge-green ml-2"><i class="fas fa-check mr-1"></i> Confirmado</span>` :
+                    `<span class="badge badge-red ml-2"><i class="fas fa-clock mr-1"></i> Pendiente</span>`;
+                
+                const fechaTexto = ultrasonido.fecha ? 
+                    `<div class="text-xs text-gray-500 mt-1">${new Date(ultrasonido.fecha).toLocaleDateString('es-ES')}</div>` : '';
+                
+                htmlUltrasonidos += `
+                    <div class="p-3 bg-white rounded border border-gray-200">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="text-sm font-medium text-gray-800">
+                                    ${ultrasonido.numero}. ${ultrasonido.nombre}
+                                </div>
+                                <div class="text-xs text-gray-600 mt-1">
+                                    <i class="fas fa-calendar-week mr-1"></i> Rango: ${ultrasonido.rango} semanas
+                                </div>
+                                ${fechaTexto}
+                            </div>
+                            ${estado}
+                        </div>
+                    </div>
+                `;
+            });
+        } else {
+            htmlUltrasonidos = '<div class="text-center text-gray-500 py-4">No hay datos de ultrasonidos disponibles</div>';
+        }
+        
+        listaUltrasonidos.innerHTML = htmlUltrasonidos;
+    }
+}
+        // ========== FUNCIONES PARA DETECCIÓN DE CITAS ==========
+        
+        async function manejarClickEnFecha(info) {
+		    
+		    fechaSeleccionada = info.dateStr; 
+		    const fechaParaMostrar = formatearFechaParaModal(fechaSeleccionada);
+		    
+		    console.log('Fecha seleccionada (ISO):', fechaSeleccionada);
+		    console.log('Fecha para mostrar:', fechaParaMostrar);
+		    await determinarRangosSemanas(fechaSeleccionada);
+		    
+		    // Mostrar el modal de selección de citas
+		    mostrarModalSeleccionCitas(fechaParaMostrar);
+		}
+		
+		// Nueva función para formatear fecha correctamente
+		function formatearFechaParaModal(fechaISO) {
+		    // Crear fecha sin problemas de zona horaria
+		    const partes = fechaISO.split('-');
+		    const año = parseInt(partes[0]);
+		    const mes = parseInt(partes[1]) - 1; // Meses 0-indexados
+		    const dia = parseInt(partes[2]);
+		    
+		    const fechaLocal = new Date(año, mes, dia);
+		    
+		    return fechaLocal.toLocaleDateString('es-ES', {
+		        day: 'numeric',
+		        month: 'long',
+		        year: 'numeric'
+		    });
+		}
+
+        // Función para determinar los rangos de semanas basados en la fecha
+        async function determinarRangosSemanas(fecha) {
+            try {
+                const response = await fetch('/api/citas/info-embarazo');
+                const data = await response.json();
+                
+                if (data.ultimaMestruacion) {
+                    const fechaMestruacion = new Date(data.ultimaMestruacion);
+                    const fechaSeleccionadaDate = new Date(fecha);
+                    
+                    // Calcular diferencia en semanas
+                    const diffTiempo = fechaSeleccionadaDate - fechaMestruacion;
+                    const diffSemanas = Math.floor(diffTiempo / (1000 * 60 * 60 * 24 * 7));
+                    
+                    console.log(`Semanas de embarazo calculadas: ${diffSemanas}`);
+                    
+                    // Rangos para consultas prenatales
+                    let rangoPrenatal = null;
+                    if (diffSemanas >= 0 && diffSemanas <= 8) {
+                        rangoPrenatal = '0-8';
+                    } else if (diffSemanas >= 10 && diffSemanas <= 14) {
+                        rangoPrenatal = '10-14';
+                    } else if (diffSemanas >= 16 && diffSemanas <= 18) {
+                        rangoPrenatal = '16-18';
+                    } else if (diffSemanas >= 22 && diffSemanas <= 23) {
+                        rangoPrenatal = '22';
+                    } else if (diffSemanas >= 28 && diffSemanas <= 29) {
+                        rangoPrenatal = '28';
+                    } else if (diffSemanas >= 32 && diffSemanas <= 33) {
+                        rangoPrenatal = '32';
+                    } else if (diffSemanas >= 36 && diffSemanas <= 37) {
+                        rangoPrenatal = '36';
+                    } else if (diffSemanas >= 38 && diffSemanas <= 41) {
+                        rangoPrenatal = '38-41';
+                    }
+                    
+                    // Rangos para ultrasonido
+                    let rangoUltrasonido = determinarRangoUltrasonido(diffSemanas);
+                    
+                    // Guardar ambos rangos
+                    sessionStorage.setItem('rangoPrenatal', rangoPrenatal);
+                    sessionStorage.setItem('rangoUltrasonido', rangoUltrasonido);
+                    sessionStorage.setItem('semanasEmbarazo', diffSemanas);
+                    
+                    // Inicializar citas seleccionadas
+                    citasSeleccionadas.prenatal.rango = rangoPrenatal;
+                    citasSeleccionadas.ultrasonido.rango = rangoUltrasonido;
+                    
+                    console.log(`Rango prenatal: ${rangoPrenatal}, Rango ultrasonido: ${rangoUltrasonido}`);
+                }
+            } catch (error) {
+                console.error('Error al determinar rangos de semanas:', error);
+            }
+        }
+
+        // Función para determinar el rango de semanas específico para ultrasonido
+        function determinarRangoUltrasonido(semanas) {
+            if (semanas >= 10 && semanas <= 14) {
+                return '10-14';
+            } else if (semanas >= 18 && semanas <= 24) {
+                return '18-24';
+            } else if (semanas >= 29 && semanas <= 30) {
+                return '29-30';
+            }
+            return null;
+        }
+
+        // Modal para seleccionar múltiples citas
+        function mostrarModalSeleccionCitas(fechaFormateada) {
+            // Actualizar información en el modal
+            document.getElementById('modalFecha').textContent = fechaFormateada;
+            
+            // Obtener rangos almacenados
+            const rangoPrenatal = sessionStorage.getItem('rangoPrenatal');
+            const rangoUltrasonido = sessionStorage.getItem('rangoUltrasonido');
+            const semanasEmbarazo = sessionStorage.getItem('semanasEmbarazo');
+            
+            // Resetear selecciones
+            citasSeleccionadas.prenatal.seleccionada = false;
+            citasSeleccionadas.ultrasonido.seleccionada = false;
+            
+            // Mostrar opciones de citas con checkboxes
+            const citasContainer = document.getElementById('citasEnFecha');
+            citasContainer.innerHTML = `
+                <div class="mb-4">
+                    <strong class="text-gray-700">Selecciona las citas que deseas confirmar:</strong>
+                </div>
+                
+                <div class="cita-item" data-tipo="prenatal" id="citaPrenatal" 
+                     onclick="toggleSeleccionCita('prenatal')">
+                    <div class="cita-icon">👩‍⚕️</div>
+                    <div class="cita-details">
+                        <div class="cita-title">Consulta Prenatal</div>
+                        <div class="cita-description">Control médico de embarazo</div>
+                        ${rangoPrenatal ? 
+                            `<div class="text-blue-600 text-xs mt-1">Rango: ${rangoPrenatal} semanas</div>` : 
+                            `<div class="text-gray-400 text-xs mt-1">No disponible para semana ${semanasEmbarazo}</div>`}
+                    </div>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="checkPrenatal" ${!rangoPrenatal ? 'disabled' : ''} 
+                               onchange="toggleSeleccionCita('prenatal')">
+                    </div>
+                </div>
+                
+                <div class="cita-item" data-tipo="ultrasonido" id="citaUltrasonido"
+                     onclick="toggleSeleccionCita('ultrasonido')">
+                    <div class="cita-icon">📊</div>
+                    <div class="cita-details">
+                        <div class="cita-title">Ultrasonido</div>
+                        <div class="cita-description">Estudio de imagen médica</div>
+                        ${rangoUltrasonido ? 
+                            `<div class="text-red-600 text-xs mt-1">Rango: ${rangoUltrasonido} semanas</div>` : 
+                            `<div class="text-gray-400 text-xs mt-1">No disponible para semana ${semanasEmbarazo}</div>`}
+                    </div>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="checkUltrasonido" ${!rangoUltrasonido ? 'disabled' : ''} 
+                               onchange="toggleSeleccionCita('ultrasonido')">
+                    </div>
+                </div>
+                
+                <div class="bg-blue-50 p-3 rounded-lg border-l-4 border-blue-500 mt-4">
+                    <p class="text-gray-600 text-sm m-0">
+                        <i class="fas fa-info-circle mr-2"></i> 
+                        Puedes seleccionar una o ambas citas para esta fecha
+                    </p>
+                </div>
+            `;
+            
+            // Mostrar modal
+            document.getElementById('confirmacionModal').style.display = 'flex';
+            document.getElementById('btnConfirmarCita').style.display = 'none';
+            document.getElementById('seleccionInfo').style.display = 'none';
+        }
+
+        // Función para alternar la selección de una cita
+        function toggleSeleccionCita(tipo) {
+            const checkbox = document.getElementById(`check${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`);
+            const citaItem = document.getElementById(`cita${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`);
+            
+            // Si el checkbox está deshabilitado, no hacer nada
+            if (checkbox.disabled) {
+                return;
+            }
+            
+            // Alternar selección
+            citasSeleccionadas[tipo].seleccionada = !citasSeleccionadas[tipo].seleccionada;
+            checkbox.checked = citasSeleccionadas[tipo].seleccionada;
+            
+            // Actualizar apariencia
+            if (citasSeleccionadas[tipo].seleccionada) {
+                citaItem.classList.add('selected');
+            } else {
+                citaItem.classList.remove('selected');
+            }
+            
+            // Actualizar contador y mostrar información
+            actualizarContadorSeleccion();
+            
+            // Actualizar botón de confirmar
+            const btnConfirmar = document.getElementById('btnConfirmarCita');
+            const haySeleccionadas = citasSeleccionadas.prenatal.seleccionada || citasSeleccionadas.ultrasonido.seleccionada;
+            
+            if (haySeleccionadas) {
+                btnConfirmar.style.display = 'block';
+                
+                // Determinar si hay una o ambas seleccionadas
+                const ambasSeleccionadas = citasSeleccionadas.prenatal.seleccionada && citasSeleccionadas.ultrasonido.seleccionada;
+                
+                if (ambasSeleccionadas) {
+                    btnConfirmar.className = 'btn-success-combinado';
+                    btnConfirmar.innerHTML = '<i class="fas fa-calendar-check"></i> Confirmar Ambas Citas';
+                    document.getElementById('seleccionInfo').style.display = 'flex';
+                } else if (citasSeleccionadas.prenatal.seleccionada) {
+                    btnConfirmar.className = 'btn-success';
+                    btnConfirmar.innerHTML = '<i class="fas fa-calendar-check"></i> Confirmar Consulta Prenatal';
+                    document.getElementById('seleccionInfo').style.display = 'none';
+                } else {
+                    btnConfirmar.className = 'btn-success';
+                    btnConfirmar.innerHTML = '<i class="fas fa-calendar-check"></i> Confirmar Ultrasonido';
+                    document.getElementById('seleccionInfo').style.display = 'none';
+                }
+            } else {
+                btnConfirmar.style.display = 'none';
+                document.getElementById('seleccionInfo').style.display = 'none';
+            }
+        }
+
+        // Función para actualizar el contador de selección
+        function actualizarContadorSeleccion() {
+            const contador = document.getElementById('contadorSeleccion');
+            const total = (citasSeleccionadas.prenatal.seleccionada ? 1 : 0) + 
+                         (citasSeleccionadas.ultrasonido.seleccionada ? 1 : 0);
+            
+            contador.textContent = `${total} ${total === 1 ? 'cita' : 'citas'} seleccionada${total !== 1 ? 's' : ''}`;
+        }
+
+        // Función para cerrar el modal
+        function cerrarModal() {
+            document.getElementById('confirmacionModal').style.display = 'none';
+            fechaSeleccionada = null;
+            citasSeleccionadas.prenatal.seleccionada = false;
+            citasSeleccionadas.ultrasonido.seleccionada = false;
+        }
+
+        // Función para confirmar las citas seleccionadas
+        async function confirmarCitas() {
+            if (!fechaSeleccionada) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Fecha no seleccionada',
+                    text: 'No hay fecha seleccionada'
+                });
+                return;
+            }
+            
+            const fechaUTC = new Date(fechaSeleccionada);
+            // Ajustar a medianoche UTC
+            const fechaAjustada = new Date(Date.UTC(
+                fechaUTC.getUTCFullYear(),
+                fechaUTC.getUTCMonth(),
+                fechaUTC.getUTCDate()
+            ));
+            
+            // Formato YYYY-MM-DD
+            const fechaParaEnviar = fechaSeleccionada;
+            
+            console.log('Fecha original:', fechaSeleccionada);
+            console.log('Fecha ajustada para enviar:', fechaParaEnviar);
+
+            // Verificar si hay al menos una cita seleccionada
+            if (!citasSeleccionadas.prenatal.seleccionada && !citasSeleccionadas.ultrasonido.seleccionada) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Selección requerida',
+                    text: 'Por favor selecciona al menos una cita'
+                });
+                return;
+            }
+
+            const btnConfirmar = document.getElementById('btnConfirmarCita');
+            const textoOriginal = btnConfirmar.innerHTML;
+            
+            try {
+                btnConfirmar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Confirmando...';
+                btnConfirmar.disabled = true;
+                
+                // Array para almacenar las promesas de confirmación
+                const confirmaciones = [];
+                
+                // Confirmar consulta prenatal si está seleccionada
+                if (citasSeleccionadas.prenatal.seleccionada && citasSeleccionadas.prenatal.rango) {
+                    console.log('Confirmando consulta prenatal:', {
+                        tipoCita: 'prenatal',
+                        rangoSemanas: citasSeleccionadas.prenatal.rango,
+                        fechaSeleccionada: fechaParaEnviar
+                    });
+                    
+                    confirmaciones.push(
+                        fetch('/api/citas/confirmar-cita', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: `tipoCita=prenatal&rangoSemanas=${citasSeleccionadas.prenatal.rango}&fechaSeleccionada=${fechaSeleccionada}`
+                        }).then(response => response.json())
+                    );
+                }
+                
+                // Confirmar ultrasonido si está seleccionado
+                if (citasSeleccionadas.ultrasonido.seleccionada && citasSeleccionadas.ultrasonido.rango) {
+                    console.log('Confirmando ultrasonido:', {
+                        tipoCita: 'ultrasonido',
+                        rangoSemanas: citasSeleccionadas.ultrasonido.rango,
+                        fechaSeleccionada: fechaParaEnviar
+                    });
+                    
+                    confirmaciones.push(
+                        fetch('/api/citas/confirmar-cita', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: `tipoCita=ultrasonido&rangoSemanas=${citasSeleccionadas.ultrasonido.rango}&fechaSeleccionada=${fechaSeleccionada}`
+                        }).then(response => response.json())
+                    );
+                }
+                
+                // Ejecutar todas las confirmaciones
+                const resultados = await Promise.all(confirmaciones);
+                
+                // Verificar resultados
+                const exitosas = resultados.filter(r => r.status === 'success');
+                const fallidas = resultados.filter(r => r.status !== 'success');
+                
+                if (fallidas.length === 0) {
+                    // Todas exitosas
+                    const mensaje = exitosas.length === 2 ? 
+                        '¡Ambas citas confirmadas exitosamente!' :
+                        '¡Cita confirmada exitosamente!';
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Éxito!',
+                        text: mensaje,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    
+                    // Cerrar modal
+                    cerrarModal();
+                    
+                    // Recargar el calendario para mostrar los cambios
+                    if (calendar) {
+                        calendar.refetchEvents();
+                    }
+                    
+                    // Actualizar información del embarazo Y los contadores
+                 // Después de Swal.fire exitoso
+                    setTimeout(async () => {
+                        await cargarInfoEmbarazo();
+                        await actualizarContadoresCitas(); // Esto actualizará los contadores
+                        if (calendar) {
+                            calendar.refetchEvents(); // Refrescar calendario
+                        }
+                    }, 1000);
+                    
+                } else {
+                    // Hubo errores
+                    const mensajeError = fallidas.map(f => f.message || 'Error desconocido').join('\n');
+                    throw new Error(`Error al confirmar algunas citas:\n${mensajeError}`);
+                }
+                
+            } catch (error) {
+                console.error('Error al confirmar citas:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al confirmar las citas: ' + error.message
+                });
+                
+                btnConfirmar.innerHTML = textoOriginal;
+                btnConfirmar.disabled = false;
+            }
+        }
+
+        // Función para cambiar la vista del calendario
+        function cambiarVistaCalendario(vista) {
+            currentCalendarView = vista;
+            
+            // Actualizar botones activos
+            document.querySelectorAll('.calendar-view-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-view="${vista}"]`).classList.add('active');
+            
+            // Recargar calendario
+            if (calendar) {
+                calendar.destroy();
+            }
+            initializeCalendar();
+        }
+
+        // Función para obtener el endpoint del calendario
+        function getCalendarEndpoint() {
+            switch(currentCalendarView) {
+                case 'consultas':
+                    return '/api/citas/calendario';
+                case 'ultrasonidos':
+                    return '/api/citas/ultrasonidos/calendario';
+                case 'completo':
+                default:
+                    return '/api/citas/calendario-completo';
+            }
+        }
+
+        // Función para inicializar el calendario
+        function initializeCalendar() {
+            const calendarEl = document.getElementById('calendar');
+            if (!calendarEl) return;
+            
+            calendarEl.innerHTML = '';
+            
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'es',
+                timeZone: 'UTC',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                events: {
+                    url: getCalendarEndpoint(),
+                    extraParams: {
+                        timezone: 'UTC'
+                    },
+                    // Corregir el desfase
+                    success: function(events) {
+                        // Ajustar manualmente si es necesario
+                        events.forEach(event => {
+                            if (event.start) {
+                                const date = new Date(event.start);
+                                // Añadir el desfase de zona horaria
+                                date.setMinutes(date.getMinutes() + date.getTimezoneOffset());
+                                event.start = date.toISOString();
+                            }
+                        });
+                        return events;
+                    },
+                    failure: function() {
+                        console.error('Error al cargar eventos del calendario');
+                    }
+                },
+                // Hacer que las fechas sean clickeables
+                dateClick: function(info) {
+                    manejarClickEnFecha(info);
+                },
+                eventDidMount: function(info) {
+                    info.el.style.backgroundColor = info.event.backgroundColor;
+                    info.el.style.borderColor = info.event.backgroundColor;
+                    info.el.style.color = 'white';
+                    info.el.style.fontWeight = 'bold';
+                    info.el.style.padding = '2px 4px';
+                    info.el.title = info.event.extendedProps.description;
+                },
+                eventClick: function(info) {
+                    // Mostrar información del evento existente
+                    const fecha = info.event.start.toLocaleDateString('es-ES');
+                    const tipo = info.event.extendedProps.type === 'ultrasonido' ? 
+                        'Ultrasonido' : 'Consulta Prenatal';
+                    const descripcion = info.event.extendedProps.description || 'Sin descripción adicional';
+                    
+                    Swal.fire({
+                        title: tipo,
+                        html: `<strong>📅 Fecha:</strong> ${fecha}<br><strong>📝 Descripción:</strong> ${descripcion}`,
+                        icon: 'info',
+                        confirmButtonText: 'Entendido'
+                    });
+                }
+            });
+
+            calendar.render();
+        }
+        
+        // ========== FUNCIONES DEL CHATBOT ==========
+        function toggleChatbot() {
+            const chatbot = document.getElementById('chatbotContainer');
+            const notificationBadge = document.querySelector('.notification-badge');
+            
+            chatbot.classList.toggle('visible');
+            
+            if (!chatOpened && chatbot.classList.contains('visible')) {
+                chatOpened = true;
+                notificationBadge.style.display = 'none';
+                
+                setTimeout(() => {
+                    const welcomeMsg = "¡Hola! Soy tu asistente de salud materna. Puedes preguntarme sobre embarazo o puerperio. También puedo leer las respuestas en voz alta.";
+                    addBotMessage(welcomeMsg);
+                    speakText(welcomeMsg);
+                }, 300);
+            }
+        }
+        
+        function toggleVoice() {
+            voiceEnabled = !voiceEnabled;
+            const voiceButton = document.getElementById('voiceToggle');
+            
+            if (voiceEnabled) {
+                voiceButton.innerHTML = '<i class="fas fa-volume-up"></i>';
+                speakText("Voz activada");
+            } else {
+                voiceButton.innerHTML = '<i class="fas fa-volume-mute"></i>';
+                speakText("Voz desactivada");
+            }
+        }
+        
+        function speakText(text) {
+            if (!voiceEnabled) return;
+            
+            if (!voicesLoaded) {
+                setPreferredVoice();
+            }
+            
+            window.speechSynthesis.cancel();
+            speech.text = text;
+            window.speechSynthesis.speak(speech);
+        }
+        
+        function addBotMessage(text) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', 'bot-message');
+            messageDiv.textContent = text;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function addUserMessage(text) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', 'user-message');
+            messageDiv.textContent = text;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        async function sendMessage() {
+            const userInput = document.getElementById('userInput');
+            const modeSelect = document.getElementById('modeSelect');
+            
+            if (!userInput.value.trim()) return;
+            
+            addUserMessage(userInput.value);
+            
+            const userMessage = userInput.value;
+            userInput.value = '';
+            
+            try {
+                const response = await fetch('/api/chatbot/responder', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `pregunta=${encodeURIComponent(userMessage)}&categoria=${encodeURIComponent(modeSelect.value)}`
+                });
+                
+                const data = await response.json();
+                
+                setTimeout(() => {
+                    addBotMessage(data.respuesta);
+                    speakText(data.respuesta);
+                }, 500);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                setTimeout(() => {
+                    const errorMsg = "Lo siento, hubo un error al procesar tu pregunta. Por favor, intenta nuevamente.";
+                    addBotMessage(errorMsg);
+                    speakText(errorMsg);
+                }, 500);
+            }
+        }
+        
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+        
+        function setPreferredVoice() {
+            const voices = window.speechSynthesis.getVoices();
+            
+            if (voices.length === 0) {
+                setTimeout(setPreferredVoice, 100);
+                return;
+            }
+            
+            const preferredVoices = voices.filter(voice => 
+                voice.lang === 'es-US' ||
+                voice.lang === 'es-MX' ||
+                voice.lang === 'es-419' ||
+                voice.name.toLowerCase().includes('latino')
+            );
+            
+            const selectedVoice = preferredVoices[0] || voices[0];
+            
+            if (selectedVoice) {
+                speech.voice = selectedVoice;
+                voicesLoaded = true;
+            }
+        }
+        
+        function initSpeechSynthesis() {
+            if ('speechSynthesis' in window) {
+                const checkVoices = () => {
+                    const voices = speechSynthesis.getVoices();
+                    if (voices.length > 0) {
+                        setPreferredVoice();
+                    } else {
+                        setTimeout(checkVoices, 100);
+                    }
+                };
+                
+                speechSynthesis.onvoiceschanged = checkVoices;
+                checkVoices();
+            } else {
+                voiceEnabled = false;
+                document.getElementById('voiceToggle').style.display = 'none';
+            }
+        }
+
+        // Inicializar cuando se carga la página
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("Página cargada - Inicializando...");
+            initSpeechSynthesis();
+            initializeCalendar();
+            cargarInfoEmbarazo();
+            actualizarContadoresCitas();
+            checkScreenSize();
+            
+            // Actualizar contadores periódicamente (cada 30 segundos)
+            setInterval(async () => {
+                await actualizarContadoresCitas();
+            }, 30000);
+        });
+    </script>
+</body>
+</html>

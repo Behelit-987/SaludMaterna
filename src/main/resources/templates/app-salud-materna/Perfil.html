@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil de Usuaria</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <!-- AGREGAR FONTAWESOME PARA LOS ICONOS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ESTILOS DEL SIDENAV - MANTENIENDO EL ORIGINAL */
+        .sidenav {
+            height: 100%;
+            width: 250px;
+            position: fixed;
+            z-index: 1;
+            top: 0;
+            left: 0;
+            background-color: #f8f9fa;
+            overflow-x: hidden;
+            padding-top: 20px;
+            border-right: 1px solid #dee2e6;
+        }
+        
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            min-height: 100vh;
+        }
+        
+        .nav-link {
+            color: #333;
+            padding: 10px 20px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: 0.3s;
+            border-left: 3px solid transparent;
+        }
+        
+        .nav-link:hover {
+            background-color: #e9ecef;
+            color: #0d6efd;
+            border-left-color: #0d6efd;
+        }
+        
+        .nav-link.active {
+            background-color: #e3f2fd;
+            color: #0d6efd;
+            border-left-color: #0d6efd;
+            font-weight: 600;
+        }
+        
+        .nav-link i {
+            width: 20px;
+            text-align: center;
+        }
+        
+        /* ESTILOS DEL PERFIL - MANTENIENDO EL ORIGINAL */
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .perfil-container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 15px;
+        }
+        
+        .perfil-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .perfil-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        
+        .section-header {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        
+        .section-content {
+            padding: 30px;
+        }
+        
+        .info-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 1.1rem;
+            color: #212529;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+            min-height: 38px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .info-value.empty {
+            color: #6c757d;
+            font-style: italic;
+        }
+        
+        .edit-icon {
+            position: absolute;
+            right: 0;
+            top: 25px;
+            color: #6c757d;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+        
+        .edit-icon:hover {
+            color: #0d6efd;
+            background-color: #f8f9fa;
+        }
+        
+        .form-control-inline {
+            display: none;
+            width: 100%;
+            padding: 6px 12px;
+            font-size: 1.1rem;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+        }
+        
+        .form-control-inline:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+        
+        .badge-custom {
+            background-color: #e3f2fd;
+            color: #1976d2;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .select-inline {
+            display: none;
+            width: 100%;
+            padding: 6px 12px;
+            font-size: 1.1rem;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            background-color: white;
+        }
+        
+        .readonly-note {
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 5px;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        .actions-section {
+            padding: 20px;
+            text-align: center;
+            background-color: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        /* USER INFO DEL SIDENAV */
+        .user-info {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 2rem;
+        }
+        
+        /* RESPONSIVE - MANTENIENDO EL ORIGINAL */
+        @media (max-width: 768px) {
+            .sidenav {
+                width: 200px;
+            }
+            
+            .main-content {
+                margin-left: 200px;
+                padding: 15px;
+            }
+            
+            .perfil-header {
+                padding: 20px;
+            }
+            
+            .section-content {
+                padding: 20px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .sidenav {
+                width: 0;
+                position: fixed;
+                z-index: 1000;
+                transition: 0.3s;
+            }
+            
+            .sidenav.active {
+                width: 200px;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                z-index: 1001;
+                background: #1e40af;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                padding: 10px;
+                cursor: pointer;
+            }
+            
+            .edit-icon {
+                position: static;
+                margin-left: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    
+    <button class="mobile-menu-btn" id="mobileMenuBtn" style="display: none;" onclick="toggleMobileMenu()">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="sidenav" id="sidebar">
+    
+        <div class="user-info">
+            <div class="user-avatar">
+                <i class="fas fa-user-md"></i>
+            </div>
+            <div class="user-name">
+                <div class="text-sm text-gray-600 mt-2" th:if="${usuaria}">
+                    <span th:text="${usuaria?.nombreCompleto ?: 'Usuario'}"></span>
+                </div>
+                <small>Salud Materna</small>
+            </div>
+        </div>
+        
+        <nav class="mt-4">
+            <a href="/app-salud-materna" class="nav-link active">
+                <i class="fas fa-home"></i> Inicio
+            </a>
+            <a href="/app-salud-materna/citas" class="nav-link">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Recomendación de Citas</span>
+            </a>
+            <a href="/app-salud-materna/educacion-materna" class="nav-link">
+                <i class="fas fa-book"></i> Educación Materna
+            </a>
+            <a href="/app-salud-materna/todos-examenes" class="nav-link">
+                <i class="fas fa-heartbeat"></i> Exámenes de Laboratorio
+            </a>
+            <a href="/reporte-citas" class="nav-link">
+                <i class="fas fa-chart-line"></i> Reportes de Citas
+            </a>
+            
+            <a th:href="@{/app-salud-materna/vista/__${usuaria.idUser}__}" 
+			   class="nav-link pdf-highlight" 
+			   target="_blank">
+			    <i class="fas fa-file-pdf"></i> Generar Informe PDF
+			</a>
+
+            <a th:href="@{/logout}" class="nav-link mt-8 text-red-600">
+                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+            </a>
+        </nav>
+    </div>    
+    <div class="main-content">
+        <div class="perfil-container">
+            <!-- Mensajes -->
+            <div th:if="${param.success != null}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                <strong>¡Éxito!</strong> Los datos han sido actualizados correctamente.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            
+            <div th:if="${param.error != null}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <strong>Error!</strong> No se pudieron guardar los cambios.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Encabezado -->
+            <div class="perfil-header text-center">
+                <h1 class="display-5 fw-bold mb-3">
+                    <i class="bi bi-person-circle me-2"></i>Perfil de Usuaria
+                </h1>
+                <p class="lead">Edita tu información personal y datos de salud</p>
+                <div class="mt-3">
+                    <button id="editAllBtn" class="btn btn-light me-2">
+                        <i class="bi bi-pencil-fill me-1"></i>Editar Todo
+                    </button>
+                    <button id="saveAllBtn" class="btn btn-success" style="display: none;">
+                        <i class="bi bi-check-circle-fill me-1"></i>Guardar Todo
+                    </button>
+                    <button id="cancelAllBtn" class="btn btn-secondary" style="display: none;">
+                        <i class="bi bi-x-circle-fill me-1"></i>Cancelar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Formulario Principal -->
+            <form id="perfilForm" th:action="@{/app-salud-materna/perfil/guardar}" method="post">
+                <input type="hidden" name="idUser" th:value="${usuaria.idUser}" />
+                
+                <!-- Información Personal -->
+                <div class="perfil-card">
+                    <div class="section-header">
+                        <div>
+                            <i class="bi bi-person-vcard-fill text-primary fs-4"></i>
+                            <h3 class="mb-0 d-inline ms-2">Información Personal</h3>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="info-group">
+                                    <div class="info-label">Nombres</div>
+                                    <div class="info-value" id="nombresDisplay">
+                                        <span th:text="${usuaria.nombres} ?: 'No especificado'"></span>
+                                    </div>
+                                    <input type="text" class="form-control-inline" name="nombres" 
+                                           th:value="${usuaria.nombres}" placeholder="Ingresa tus nombres">
+                                    <i class="bi bi-pencil edit-icon" onclick="enableEdit('nombres')"></i>
+                                </div>
+                                <div class="info-group">
+                                    <div class="info-label">Apellidos</div>
+                                    <div class="info-value" id="apellidosDisplay">
+                                        <span th:text="${usuaria.apellidos} ?: 'No especificado'"></span>
+                                    </div>
+                                    <input type="text" class="form-control-inline" name="apellidos" 
+                                           th:value="${usuaria.apellidos}" placeholder="Ingresa tus apellidos">
+                                    <i class="bi bi-pencil edit-icon" onclick="enableEdit('apellidos')"></i>
+                                </div>
+                                <div class="info-group">
+                                    <div class="info-label">Fecha de Nacimiento</div>
+                                    <div class="info-value" id="fechaNacimientoDisplay">
+                                        <span th:text="${usuaria.fechaNacimiento} ? ${#temporals.format(usuaria.fechaNacimiento, 'dd/MM/yyyy')} : 'No especificada'"></span>
+                                    </div>
+                                    <input type="date" class="form-control-inline" name="fechaNacimiento" 
+                                           th:value="${usuaria.fechaNacimiento}">
+                                    <i class="bi bi-pencil edit-icon" onclick="enableEdit('fechaNacimiento')"></i>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-group">
+                                    <div class="info-label">CURP</div>
+                                    <div class="info-value" id="curpDisplay">
+                                        <span th:text="${usuaria.curp} ?: 'No especificado'"></span>
+                                    </div>
+                                    <input type="text" class="form-control-inline" name="curp" 
+                                           th:value="${usuaria.curp}" placeholder="Ingresa tu CURP" maxlength="18">
+                                    <i class="bi bi-pencil edit-icon" onclick="enableEdit('curp')"></i>
+                                </div>
+                                <div class="info-group">
+                                    <div class="info-label">Domicilio</div>
+                                    <div class="info-value" id="domicilioDisplay">
+                                        <span th:text="${usuaria.domicilio} ?: 'No especificado'"></span>
+                                    </div>
+                                    <input type="text" class="form-control-inline" name="domicilio" 
+                                           th:value="${usuaria.domicilio}" placeholder="Ingresa tu domicilio">
+                                    <i class="bi bi-pencil edit-icon" onclick="enableEdit('domicilio')"></i>
+                                </div>
+                                <div class="info-group">
+                                    <div class="info-label">Teléfono Celular</div>
+                                    <div class="info-value" id="numCelularDisplay">
+                                        <span th:text="${usuaria.numCelular} ?: 'No especificado'"></span>
+                                    </div>
+                                    <input type="tel" class="form-control-inline" name="numCelular" 
+                                           th:value="${usuaria.numCelular}" placeholder="10 dígitos" pattern="[0-9]{10}">
+                                    <i class="bi bi-pencil edit-icon" onclick="enableEdit('numCelular')"></i>
+                                </div>
+                                <div class="info-group">
+                                    <div class="info-label">Teléfono de Emergencia</div>
+                                    <div class="info-value" id="numEmergenciaDisplay">
+                                        <span th:text="${usuaria.numEmergencia} ?: 'No especificado'"></span>
+                                    </div>
+                                    <input type="tel" class="form-control-inline" name="numEmergencia" 
+                                           th:value="${usuaria.numEmergencia}" placeholder="10 dígitos" pattern="[0-9]{10}">
+                                    <i class="bi bi-pencil edit-icon" onclick="enableEdit('numEmergencia')"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Datos Antropométricos -->
+                <div class="perfil-card">
+                    <div class="section-header">
+                        <div>
+                            <i class="bi bi-rulers-fill text-success fs-4"></i>
+                            <h3 class="mb-0 d-inline ms-2">Datos Antropométricos</h3>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="info-group">
+                                    <div class="info-label">Talla (Metros)</div>
+                                    <div class="info-value" id="tallaDisplay">
+                                        <span th:text="${usuaria.talla} ? ${usuaria.talla + ' M'} : 'No especificada'"></span>
+                                    </div>
+                                    <input type="number" step="0.01" class="form-control-inline" name="talla" 
+                                           th:value="${usuaria.talla}" min="0.5" max="2.5" placeholder="Ej: 1.65">
+                                    <i class="bi bi-pencil edit-icon" onclick="enableEdit('talla')"></i>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-group">
+                                    <div class="info-label">Peso (kg)</div>
+                                    <div class="info-value" id="pesoDisplay">
+                                        <span th:text="${usuaria.peso} ? ${usuaria.peso + ' kg'} : 'No especificado'"></span>
+                                    </div>
+                                    <input type="number" step="0.1" class="form-control-inline" name="peso" 
+                                           th:value="${usuaria.peso}" min="30" max="200" placeholder="Ej: 65.5">
+                                    <i class="bi bi-pencil edit-icon" onclick="enableEdit('peso')"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Datos de Salud -->
+                <!-- Datos de Salud - sección modificada -->
+<div class="perfil-card">
+    <div class="section-header">
+        <div>
+            <i class="bi bi-heart-pulse-fill text-danger fs-4"></i>
+            <h3 class="mb-0 d-inline ms-2">Datos de Salud</h3>
+        </div>
+    </div>
+    <div class="section-content">
+        <!-- DEBUG: Mostrar si conocimiento está disponible -->
+        <div th:if="${conocimiento == null}" class="alert alert-info">
+            <i class="bi bi-info-circle"></i> No hay datos de salud registrados. Completa el cuestionario en la página de inicio.
+        </div>
+        
+        <input type="hidden" name="conocimientoId" 
+               th:value="${conocimiento?.idConocimiento ?: ''}" />
+        
+        <div class="row">
+            <!-- Grupo Sanguíneo -->
+            <div class="col-md-4">
+                <div class="info-group">
+                    <div class="info-label">Grupo Sanguíneo</div>
+                    <div class="info-value" id="grupoSanguineoDisplay">
+                        <span th:if="${conocimiento?.grupoSanguineo != null}" 
+                              th:text="${conocimiento.grupoSanguineo}" 
+                              class="badge-custom"></span>
+                        <span th:if="${conocimiento?.grupoSanguineo == null}" 
+                              class="empty">No especificado</span>
+                    </div>
+                    <select class="select-inline" name="grupoSanguineo">
+                        <option value="">Seleccionar</option>
+                        <option th:each="grupo : ${T(mx.edu.uacm.ws.Entity.ConocimientoGeneral$Sanguineo).values()}" 
+                                th:value="${grupo}" 
+                                th:text="${grupo}"
+                                th:selected="${conocimiento?.grupoSanguineo == grupo}">
+                        </option>
+                    </select>
+                    <i class="bi bi-pencil edit-icon" onclick="enableSelectEdit('grupoSanguineo')"></i>
+                </div>
+            </div>
+            
+            <!-- RH -->
+            <div class="col-md-4">
+                <div class="info-group">
+                    <div class="info-label">RH</div>
+                    <div class="info-value" id="rhDisplay">
+                        <span th:if="${conocimiento?.rh != null}" 
+                              th:text="${conocimiento.rh}" 
+                              class="badge-custom"></span>
+                        <span th:if="${conocimiento?.rh == null}" 
+                              class="empty">No especificado</span>
+                    </div>
+                    <select class="select-inline" name="rh">
+                        <option value="">Seleccionar</option>
+                        <option th:each="rh : ${T(mx.edu.uacm.ws.Entity.ConocimientoGeneral$RH).values()}" 
+                                th:value="${rh}" 
+                                th:text="${rh}"
+                                th:selected="${conocimiento?.rh == rh}">
+                        </option>
+                    </select>
+                    <i class="bi bi-pencil edit-icon" onclick="enableSelectEdit('rh')"></i>
+                </div>
+            </div>
+            
+            <!-- Seguro Social -->
+            <div class="col-md-4">
+                <div class="info-group">
+                    <div class="info-label">Seguro Social</div>
+                    <div class="info-value" id="seguroSocialDisplay">
+                        <span th:if="${conocimiento?.seguroSocial != null}" 
+                              th:text="${conocimiento.seguroSocial}"></span>
+                        <span th:if="${conocimiento?.seguroSocial == null}" 
+                              class="empty">No especificado</span>
+                    </div>
+                    <select class="select-inline" name="seguroSocial" id="seguroSocialSelect" onchange="toggleOtroSeguro()">
+                        <option value="">Seleccionar</option>
+                        <option th:each="seguro : ${T(mx.edu.uacm.ws.Entity.ConocimientoGeneral$Seguro).values()}" 
+                                th:value="${seguro}" 
+                                th:text="${seguro}"
+                                th:selected="${conocimiento?.seguroSocial == seguro}">
+                        </option>
+                    </select>
+                    <i class="bi bi-pencil edit-icon" onclick="enableSelectEdit('seguroSocial')"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Otro Seguro -->
+        <div class="row" id="otroSeguroRow" 
+             th:style="${conocimiento?.seguroSocial?.name() == 'Otra'} ? '' : 'display: none;'">
+            <div class="col-md-6">
+                <div class="info-group">
+                    <div class="info-label">Especificar otro seguro</div>
+                    <div class="info-value" id="otroSeguroDisplay">
+                        <span th:text="${conocimiento?.otroSeguro ?: 'No especificado'}"></span>
+                    </div>
+                    <input type="text" class="form-control-inline" name="otroSeguro" 
+                           th:value="${conocimiento?.otroSeguro}" 
+                           placeholder="Especificar otro seguro">
+                    <i class="bi bi-pencil edit-icon" onclick="enableEdit('otroSeguro')"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <!-- Número de Afiliación -->
+            <div class="col-md-6">
+                <div class="info-group">
+                    <div class="info-label">Número de Afiliación</div>
+                    <div class="info-value" id="numAfiliacionDisplay">
+                        <span th:text="${conocimiento?.numAfiliacion ?: 'No especificado'}"></span>
+                    </div>
+                    <input type="text" class="form-control-inline" name="numAfiliacion" 
+                           th:value="${conocimiento?.numAfiliacion}" 
+                           placeholder="Número de afiliación">
+                    <i class="bi bi-pencil edit-icon" onclick="enableEdit('numAfiliacion')"></i>
+                </div>
+            </div>
+            
+             <!-- 
+            <div class="col-md-6">
+                <div class="info-group">
+                    <div class="info-label">Lugar de la Unidad Médica. Si no conoces tu unidad medica, guiate por tu Codigo Postal y estaran las unidades más cercanas</div>
+                    <div class="info-value" id="n1LugarDisplay">
+                        <span th:text="${conocimiento?.n1Lugar ?: 'No especificado'}"></span>
+                    </div>
+                    <input type="text" class="form-control-inline" name="n1Lugar" 
+                           th:value="${conocimiento?.n1Lugar}" 
+                           placeholder="Ej: Hospital General, Clínica de Salud, etc.">
+                    <i class="bi bi-pencil edit-icon" onclick="enableEdit('n1Lugar')"></i>
+                </div>
+            </div>
+            -->
+            
+            
+        </div>
+    </div>
+</div>                
+                <!-- Información de Cuenta (solo lectura) -->
+                <div class="perfil-card">
+                    <div class="section-header">
+                        <div>
+                            <i class="bi bi-info-circle-fill text-info fs-4"></i>
+                            <h3 class="mb-0 d-inline ms-2">Información de Cuenta</h3>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="info-group">
+                                    <div class="info-label">Email</div>
+                                    <div class="info-value">
+                                        <span th:text="${usuaria.email}">usuario@ejemplo.com</span>
+                                        <div class="readonly-note">
+                                            <i class="bi bi-lock me-1"></i>No editable
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-group">
+                                    <div class="info-label">Fecha de Registro</div>
+                                    <div class="info-value">
+                                        <span th:text="${#temporals.format(usuaria.fechaRegistro, 'dd/MM/yyyy HH:mm')}">01/01/2024 12:00</span>
+                                        <div class="readonly-note">
+                                            <i class="bi bi-lock me-1"></i>No editable
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="info-group">
+                                    <div class="info-label">Estado de la Cuenta</div>
+                                    <div class="info-value">
+                                        <span th:if="${usuaria.activo}" class="badge bg-success">Activa</span>
+                                        <span th:unless="${usuaria.activo}" class="badge bg-danger">Inactiva</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones de acción -->
+                <div class="perfil-card">
+                    <div class="actions-section">
+                        <button type="submit" class="btn btn-primary btn-lg me-2" id="submitBtn">
+                            <i class="bi bi-check-circle-fill me-2"></i>Guardar Todos los Cambios
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-lg" onclick="cancelAllEdits()">
+                            <i class="bi bi-x-circle-fill me-2"></i>Cancelar Todos los Cambios
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white text-center py-3 mt-5">
+        <div class="container">
+            <p class="mb-0">© 2024 Salud Materna. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ========== FUNCIONES RESPONSIVE ==========
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.querySelector('.main-content');
+            
+            sidebar.classList.toggle('active');
+            
+            if (sidebar.classList.contains('active')) {
+                mainContent.style.marginLeft = '0';
+            } else {
+                if (window.innerWidth > 576) {
+                    mainContent.style.marginLeft = '250px';
+                } else {
+                    mainContent.style.marginLeft = '0';
+                }
+            }
+        }
+
+        function checkScreenSize() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.querySelector('.main-content');
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            
+            if (window.innerWidth <= 576) {
+                mobileMenuBtn.style.display = 'block';
+                sidebar.style.width = '0';
+                sidebar.classList.remove('active');
+                mainContent.style.marginLeft = '0';
+            } else {
+                mobileMenuBtn.style.display = 'none';
+                sidebar.style.width = '250px';
+                sidebar.classList.remove('active');
+                mainContent.style.marginLeft = '250px';
+            }
+        }
+
+        window.addEventListener('resize', checkScreenSize);
+        document.addEventListener('DOMContentLoaded', function() {
+            checkScreenSize();
+            console.log("Página de perfil cargada");
+        });
+
+        let editMode = false;
+        let editedFields = new Set();
+        
+        function enableEdit(fieldName) {
+            if (!editMode) {
+                startEditMode();
+            }
+            
+            const display = document.getElementById(fieldName + 'Display');
+            const input = document.querySelector(`[name="${fieldName}"]`);
+            
+            if (display && input) {
+                display.style.display = 'none';
+                input.style.display = 'block';
+                input.focus();
+                
+                editedFields.add(fieldName);
+            }
+        }
+        
+        function enableSelectEdit(fieldName) {
+            if (!editMode) {
+                startEditMode();
+            }
+            
+            const display = document.getElementById(fieldName + 'Display');
+            const input = document.querySelector(`select[name="${fieldName}"]`);
+            
+            if (display && input) {
+                display.style.display = 'none';
+                input.style.display = 'block';
+                input.focus();
+                
+                editedFields.add(fieldName);
+            }
+        }
+        
+        function startEditMode() {
+            editMode = true;
+            document.getElementById('editAllBtn').style.display = 'none';
+            document.getElementById('saveAllBtn').style.display = 'inline-block';
+            document.getElementById('cancelAllBtn').style.display = 'inline-block';
+            document.getElementById('submitBtn').style.display = 'inline-block';
+        }
+        
+        function cancelEdit(fieldName) {
+            const display = document.getElementById(fieldName + 'Display');
+            const input = document.querySelector(`[name="${fieldName}"]`);
+            
+            if (display && input) {
+                display.style.display = 'flex';
+                input.style.display = 'none';
+                editedFields.delete(fieldName);
+            }
+        }
+        
+        function cancelAllEdits() {
+            document.querySelectorAll('.form-control-inline, .select-inline').forEach(input => {
+                input.style.display = 'none';
+            });
+            
+            document.querySelectorAll('[id$="Display"]').forEach(display => {
+                display.style.display = 'flex';
+            });
+            
+            editMode = false;
+            editedFields.clear();
+            document.getElementById('editAllBtn').style.display = 'inline-block';
+            document.getElementById('saveAllBtn').style.display = 'none';
+            document.getElementById('cancelAllBtn').style.display = 'none';
+            document.getElementById('submitBtn').style.display = 'none';
+        }
+        
+        function enableAllEdits() {
+            startEditMode();
+            document.querySelectorAll('.edit-icon').forEach(icon => {
+                const fieldName = icon.getAttribute('onclick').match(/'([^']+)'/)[1];
+                enableEdit(fieldName);
+            });
+        }
+        
+        function toggleOtroSeguro() {
+            const seguroSelect = document.getElementById('seguroSocialSelect');
+            const otroSeguroRow = document.getElementById('otroSeguroRow');
+            
+            // Solo mostrar el campo "otro seguro" cuando se selecciona "Otra"
+            if (seguroSelect && seguroSelect.value === 'Otra') {
+                if (otroSeguroRow) otroSeguroRow.style.display = 'block';
+            } else {
+                if (otroSeguroRow) otroSeguroRow.style.display = 'none';
+            }
+        }
+
+        // Elimina completamente la función toggleN1Lugar o déjala vacía
+        function toggleN1Lugar() {
+            // Esta función ya no es necesaria
+        }
+        
+        document.getElementById('perfilForm').addEventListener('submit', function(e) {
+            this.noValidate = true;
+            
+            if (!editMode || editedFields.size === 0) {
+                e.preventDefault();
+                alert('No hay cambios para guardar.');
+                return;
+            }
+            
+            let hasErrors = false;
+            let errorMessage = '';
+            
+            const curp = document.querySelector('[name="curp"]');
+            if (curp && curp.value && curp.value.length !== 18) {
+                hasErrors = true;
+                errorMessage += '• El CURP debe tener 18 caracteres.\n';
+            }
+            
+            const tel1 = document.querySelector('[name="numCelular"]');
+            const tel2 = document.querySelector('[name="numEmergencia"]');
+            const telRegex = /^[0-9]{10}$/;
+            
+            if (tel1 && tel1.value && !telRegex.test(tel1.value)) {
+                hasErrors = true;
+                errorMessage += '• El teléfono celular debe tener 10 dígitos.\n';
+            }
+            
+            if (tel2 && tel2.value && !telRegex.test(tel2.value)) {
+                hasErrors = true;
+                errorMessage += '• El teléfono de emergencia debe tener 10 dígitos.\n';
+            }
+            
+            const tallaInput = document.querySelector('[name="talla"]');
+            if (tallaInput && tallaInput.value) {
+                const talla = parseFloat(tallaInput.value);
+                if (talla < 0.5 || talla > 2.5) {
+                    hasErrors = true;
+                    errorMessage += '• La talla debe estar entre 0.5 y 2.5 metros.\n';
+                }
+            }
+            
+            const pesoInput = document.querySelector('[name="peso"]');
+            if (pesoInput && pesoInput.value) {
+                const peso = parseFloat(pesoInput.value);
+                if (peso < 20 || peso > 200) {
+                    hasErrors = true;
+                    errorMessage += '• El peso debe estar entre 20 y 200 kg.\n';
+                }
+            }
+            
+            if (hasErrors) {
+                e.preventDefault();
+                alert('Por favor corrige los siguientes errores:\n\n' + errorMessage);
+                return;
+            }
+            
+            console.log("=== DEPURACIÓN: Iniciando envío de formulario ===");
+            console.log("Campos editados:", Array.from(editedFields));
+            
+            editedFields.forEach(fieldName => {
+                const input = document.querySelector(`[name="${fieldName}"]`);
+                if (input && input.style.display === 'none') {
+                    const originalDisplay = input.style.display;
+                    const originalVisibility = input.style.visibility;
+                    const originalPosition = input.style.position;
+                    
+                    input.style.display = 'block';
+                    input.style.visibility = 'hidden';
+                    input.style.position = 'absolute';
+                    input.style.opacity = '0';
+                    input.style.height = '0';
+                    input.style.width = '0';
+                    input.style.padding = '0';
+                    input.style.margin = '0';
+                    input.style.border = '0';
+                    
+                    setTimeout(() => {
+                        input.style.display = originalDisplay;
+                        input.style.visibility = originalVisibility;
+                        input.style.position = originalPosition;
+                        input.style.opacity = '';
+                        input.style.height = '';
+                        input.style.width = '';
+                        input.style.padding = '';
+                        input.style.margin = '';
+                        input.style.border = '';
+                    }, 100);
+                }
+            });
+            
+            const formData = new FormData(this);
+            for (let [key, value] of formData.entries()) {
+                console.log(`${key}: ${value}`);
+            }
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Guardando...';
+            submitBtn.disabled = true;
+        });
+        
+        document.getElementById('editAllBtn').addEventListener('click', enableAllEdits);
+        document.getElementById('cancelAllBtn').addEventListener('click', cancelAllEdits);
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                document.querySelectorAll('.alert').forEach(alert => {
+                    bootstrap.Alert.getOrCreateInstance(alert).close();
+                });
+            }, 5000);
+            
+            const seguroSelect = document.querySelector('[name="seguroSocial"]');
+            if (seguroSelect && seguroSelect.value === 'Otra') {
+                toggleOtroSeguro();
+            }
+            
+            
+            
+            console.log("=== ESTADO INICIAL DEL FORMULARIO ===");
+            const allInputs = document.querySelectorAll('input[name], select[name]');
+            allInputs.forEach(input => {
+                if (input.name && input.value) {
+                    console.log(`${input.name}: ${input.value} (tipo: ${input.type})`);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
